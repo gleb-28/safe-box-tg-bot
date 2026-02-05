@@ -1,0 +1,50 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+*.rpm
+*.deb
+*.apk
+*.gem
+*.bin
+*.db
+data/
+.ai
+
+# Test binary, built with `go test -c`
+*.test
+*.out
+
+# Compiled Object files, static and shared libraries
+*.o
+*.a
+
+# Generated files
+*.gen.go
+go.sum
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go tools, caches, etc.
+.build/
+.cache/
+.vscode/
+output
+
+# Environment variables
+.env
+
+# Local IDE files
+.idea/
+
+# Docker
+docker-compose.override.yml
+docker-compose.local.yml
+*.env
+
+# Logs
+*.log
+logs/
+*.tmp
