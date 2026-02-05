@@ -34,9 +34,11 @@ func (store *Store) Get(userID int64) *Session {
 	store.mu.RUnlock()
 
 	if ok {
+		store.logger.Debug(fmt.Sprintf("Session cache hit for userID=%d", userID))
 		return session
 	}
 
+	store.logger.Debug(fmt.Sprintf("Session cache miss for userID=%d", userID))
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -71,5 +73,7 @@ func (store *Store) GetUser(userID int64) *models.User {
 func (store *Store) UpdateUser(userID int64, user *models.User) {
 	store.Update(userID, func(s *Session) {
 		s.User = user
+		s.UserIsLoaded = true
 	})
+	store.logger.Debug(fmt.Sprintf("Session user updated for userID=%d", userID))
 }

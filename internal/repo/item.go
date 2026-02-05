@@ -14,7 +14,7 @@ func NewItemRepo(db *gorm.DB) *ItemRepo {
 	return &ItemRepo{db: db}
 }
 
-func (r *ItemRepo) GetByTelegramID(userID uint) ([]models.Item, error) {
+func (r *ItemRepo) GetByTelegramID(userID int64) ([]models.Item, error) {
 	var items []models.Item
 	if err := r.db.Where("user_id = ?", userID).Find(&items).Error; err != nil {
 		return nil, err

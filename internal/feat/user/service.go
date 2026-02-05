@@ -92,14 +92,27 @@ func (s *Service) LogMessage(userID int64, itemID uint, text string) error {
 
 func (s *Service) ensureUserSessionLoaded(userID int64) {
 	if s.store.IsUserLoaded(userID) {
+		s.logger.Debug(fmt.Sprintf("Session already loaded for userID=%d", userID))
 		return
 	}
 
+	s.logger.Debug(fmt.Sprintf("Loading user into session for userID=%d", userID))
 	userDTO, err := s.userRepo.GetByTelegramID(userID)
-	if err == nil {
-		s.store.UpdateUser(userID, &userDTO)
+	if err != nil {
+		s.logger.Error(fmt.Sprintf("Error loading user from DB for userID=%d: %v", userID, err))
 		return
 	}
+
+	if userDTO.TelegramID != 0 {
+		s.store.UpdateUser(userID, &userDTO)
+		s.logger.Debug(fmt.Sprintf("User loaded into session for userID=%d", userID))
+		return
+	}
+
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.UserIsLoaded = true
+	})
+	s.logger.Debug(fmt.Sprintf("User not found in DB for userID=%d", userID))
 }
 
 func (s *Service) getNextRandNotification() time.Time {
