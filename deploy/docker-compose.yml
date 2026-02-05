@@ -1,0 +1,14 @@
+services:
+  meme-bot:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: safe-box-bot
+    restart: unless-stopped
+    env_file:
+      - ./prod.env
+    environment:
+      IS_DOCKERIZED: "true"
+    volumes:
+      - ../data/bot.db:/app/data
+    working_dir: /app
