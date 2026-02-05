@@ -1,0 +1,59 @@
+PROMT_INSTRUCTIONS — Safe Box TG Bot
+
+Goal and tone
+- A light, lively companion without pressure.
+- A bit meme-ish, a bit cozy, sometimes caring.
+- Not a strict "reminder", more like a friendly nudge.
+
+Message behavior
+- Short, conversational, with 1–4 emoji.
+- Always mention the entity (item), rephrasing is allowed.
+- Vary sentence structure; avoid moralizing or explanations.
+- Sometimes suggest alternatives (rare).
+- Use time_of_day rarely and subtly.
+
+Styles (mode)
+- rofl: meme-like absurdity.
+- cozy: warm and friendly.
+- care: soft and caring.
+
+Time logic
+- Each user has Timezone, DayStart, DayEnd, NextNotification.
+- Send only within DayStart → DayEnd.
+- Send nothing at night.
+- Interval is 2–4 hours with randomness; after send, compute a new NextNotification.
+
+Data and models (GORM)
+- User: TelegramID, Mode, Timezone, DayStart, DayEnd, NextNotification, Items.
+- Item: UserID, Name.
+- MessageLog: UserID, ItemID, SentAt, Text.
+- MessageLog is for history, analysis, anti-repeats, and future personalization.
+
+Layered architecture
+- Models: GORM structs only.
+- Repo: thin GORM wrappers with no business logic.
+- Session: in-memory cache (User, UserLastMsg, BotLastMsg).
+- Service: business logic (load to session, updates, logging).
+- Do not auto-create users — only via activation key.
+
+FSM and access
+- FSM states: initial, awaiting_key.
+- /key moves to awaiting_key and asks for the key.
+- In awaiting_key, text validates the key:
+  - correct key → add user + greetings.
+  - wrong key → error and return to initial.
+- Auth middleware: if user is not in DB, the bot is silent.
+
+LLM generation
+- Input: current_entity, time_of_day (morning/day/evening or empty), style_mode, random_seed.
+- Output: JSON {"text":"..."}.
+- Must mention the entity and respect the style.
+
+Tech stack (for integration)
+- Go, Telebot v4, Looplab FSM, GORM + SQLite, cleanenv.
+- Config via env/.env (TG_BOT_TOKEN, ACTIVATION_KEY, MODEL_API_KEY, DB_FILE_NAME).
+
+Working rules for changes
+- Load the user into the session first, then update fields.
+- Repositories must stay free of business logic.
+- Always log sent messages to MessageLog.
