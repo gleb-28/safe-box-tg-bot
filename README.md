@@ -4,7 +4,7 @@
 
 Safe Box is a Telegram bot that sends short, human-like nudges during the day based on user items
 (e.g., "tea", "look out the window"). Messages are generated via an LLM in different styles
-(rofl/cozy/care) and are delivered only within the user's day window, with randomized 2–4 hour intervals.
+(rofl/cozy/care) and are delivered only within the user's day window, with randomized 1–3 hour intervals.
 Access is gated by an activation key.
 
 ## 🧱 Tech stack

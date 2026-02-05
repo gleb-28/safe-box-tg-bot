@@ -21,7 +21,7 @@ Time logic
 - Each user has Timezone, DayStart, DayEnd, NextNotification.
 - Send only within DayStart → DayEnd.
 - Send nothing at night.
-- Interval is 2–4 hours with randomness; after send, compute a new NextNotification.
+- Interval is 1–3 hours with randomness; after send, compute a new NextNotification.
 
 Data and models (GORM)
 - User: TelegramID, Mode, Timezone, DayStart, DayEnd, NextNotification, Items.
