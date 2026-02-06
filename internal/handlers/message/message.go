@@ -14,8 +14,8 @@ func MustInitMessagesHandler(bot *b.Bot) {
 
 func createMessageHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
-		chatId := ctx.Chat().ID
-		userFsm := bot.Fsm.GetFSMForUser(chatId)
+		userID := ctx.Chat().ID
+		userFsm := bot.Fsm.GetFSMForUser(userID)
 
 		switch userFsm.Current() {
 		case fsmManager.StateInitial:

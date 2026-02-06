@@ -105,13 +105,13 @@ func (fsm *FSMState) afterEvent(userID int64, e *f.Event) {
 	fsm.logger.Debug(fmt.Sprintf("User %d - After event '%s': New state '%s'\n", userID, e.Event, e.Dst))
 }
 
-func (fsm *FSMState) UserEvent(ctx context.Context, chatId int64, event string, args ...interface{}) {
-	userFSM := fsm.GetFSMForUser(chatId)
+func (fsm *FSMState) UserEvent(ctx context.Context, userID int64, event string, args ...interface{}) {
+	userFSM := fsm.GetFSMForUser(userID)
 	err := userFSM.Event(ctx, event, args...)
 	if err != nil {
 		var noTransition f.NoTransitionError
 		if errors.As(err, &noTransition) {
-			fsm.logger.Debug(fmt.Sprintf("User %d - No transition for event '%s' in state '%s'\n", chatId, event, userFSM.Current()))
+			fsm.logger.Debug(fmt.Sprintf("User %d - No transition for event '%s' in state '%s'\n", userID, event, userFSM.Current()))
 			return
 		}
 		fsm.logger.Error(err.Error())

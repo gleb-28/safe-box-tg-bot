@@ -12,6 +12,7 @@
 - Prefer the standard library; avoid new deps unless necessary.
 - Telegram user IDs are int64; keep method signatures consistent.
 - Use the existing logger interface; avoid fmt.Println/print.
+- In code, prefer user/userID naming (not chat/chatID).
 
 ## Data and storage
 - Use GORM for persistence and keep DB queries in internal/repo.

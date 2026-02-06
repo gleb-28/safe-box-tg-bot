@@ -69,3 +69,4 @@ Working rules for changes
 - Load the user into the session first, then update fields.
 - Repositories must stay free of business logic.
 - Always log sent messages to MessageLog.
+- In code, prefer user/userID naming (not chat/chatID).
