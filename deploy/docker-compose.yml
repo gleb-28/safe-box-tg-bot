@@ -1,5 +1,5 @@
 services:
-  meme-bot:
+  safe-box-bot:
     build:
       context: ..
       dockerfile: deploy/Dockerfile

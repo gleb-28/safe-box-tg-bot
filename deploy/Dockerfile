@@ -4,7 +4,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=1 go build -o meme-bot ./cmd/bot
+RUN CGO_ENABLED=1 go build -o safe-box-bot ./cmd/bot
 
 FROM debian:bookworm-slim AS run
 RUN apt update && apt install -y \
