@@ -42,12 +42,16 @@ func NewService(
 }
 
 func (s *Service) GetItemList(userID int64) ([]models.Item, error) {
-	s.ensureItemsSessionLoaded(userID)
+	if err := s.ensureItemsSessionLoaded(userID); err != nil {
+		return nil, err
+	}
 	return s.store.GetItemList(userID), nil
 }
 
 func (s *Service) CreateItem(userID int64, rawName string) error {
-	s.ensureItemsSessionLoaded(userID)
+	if err := s.ensureItemsSessionLoaded(userID); err != nil {
+		return err
+	}
 	name, err := s.normalizeItemName(rawName)
 	if err != nil {
 		return err
@@ -71,7 +75,9 @@ func (s *Service) CreateItem(userID int64, rawName string) error {
 }
 
 func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) error {
-	s.ensureItemsSessionLoaded(userID)
+	if err := s.ensureItemsSessionLoaded(userID); err != nil {
+		return err
+	}
 	name, err := s.normalizeItemName(rawName)
 	if err != nil {
 		return err
@@ -106,7 +112,9 @@ func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) 
 }
 
 func (s *Service) DeleteItem(userID int64, itemName string) error {
-	s.ensureItemsSessionLoaded(userID)
+	if err := s.ensureItemsSessionLoaded(userID); err != nil {
+		return err
+	}
 	items := s.store.GetItemList(userID)
 	found := false
 	for _, item := range items {
@@ -150,21 +158,22 @@ func (s *Service) ClearEditingItemName(userID int64) {
 	s.store.ClearEditingItemName(userID)
 }
 
-func (s *Service) ensureItemsSessionLoaded(userID int64) {
+func (s *Service) ensureItemsSessionLoaded(userID int64) error {
 	if s.store.IsItemsLoaded(userID) {
 		s.logger.Debug(fmt.Sprintf("Items session already loaded for userID=%d", userID))
-		return
+		return nil
 	}
 
 	s.logger.Debug(fmt.Sprintf("Loading items into session for userID=%d", userID))
 	items, err := s.itemRepo.GetByTelegramID(userID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("Error loading items from DB for userID=%d: %v", userID, err))
-		return
+		return err
 	}
 
 	s.store.SetItemList(userID, items)
 	s.logger.Debug(fmt.Sprintf("Items loaded into session for userID=%d", userID))
+	return nil
 }
 
 func (s *Service) refreshItems(userID int64) error {

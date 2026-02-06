@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/core/config"
 	l "safeboxtgbot/internal/core/logger"
 	d "safeboxtgbot/internal/db"
 	"safeboxtgbot/internal/feat/items"
+	"safeboxtgbot/internal/feat/notify"
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/handlers/commands"
@@ -38,6 +40,9 @@ func main() {
 	commands.MustInitCommandsHandler(bot)
 	keyboard.MustInitKeyboardHandler(bot)
 	message.MustInitMessagesHandler(bot)
+
+	notifyWorker := notify.NewWorker(userService, itemsService, messageLogRepo, bot, logger)
+	go notifyWorker.Start(context.Background())
 
 	logger.Info("Bot successfully started!")
 	bot.Start()

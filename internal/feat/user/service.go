@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"safeboxtgbot/internal/core/constants"
 	"safeboxtgbot/internal/core/logger"
 	"safeboxtgbot/internal/repo"
 	"safeboxtgbot/internal/session"
@@ -34,6 +35,10 @@ func NewUserService(
 	}
 }
 
+func (s *Service) GetUsersForNotification(now time.Time) ([]models.User, error) {
+	return s.userRepo.GetUsersForNotification(now)
+}
+
 func (s *Service) GetUser(userID int64) *models.User {
 	s.ensureUserSessionLoaded(userID)
 	return s.store.Get(userID).User
@@ -57,11 +62,20 @@ func (s *Service) UpdateMode(userID int64, mode models.UserMode) error {
 	return s.userRepo.Upsert(&models.User{TelegramID: userID, Mode: mode})
 }
 
-func (s *Service) UpdateNextNotification(userID int64, t time.Time) {
+func (s *Service) UpdateNextNotification(userID int64, t time.Time) error {
 	s.ensureUserSessionLoaded(userID)
 	s.store.Update(userID, func(sess *session.Session) {
 		sess.User.NextNotification = t
 	})
+	return s.userRepo.UpdateNextNotification(userID, t)
+}
+
+func (s *Service) UpdateItemBoxClosedMsgID(userID int64, msgID int) error {
+	s.ensureUserSessionLoaded(userID)
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.User.ItemBoxClosedMsgID = msgID
+	})
+	return s.userRepo.UpdateItemBoxClosedMsgID(userID, msgID)
 }
 
 func (s *Service) UpdateItems(userID int64, items []models.Item) error {
@@ -114,5 +128,8 @@ func (s *Service) ensureUserSessionLoaded(userID int64) {
 }
 
 func (s *Service) getNextRandNotification() time.Time {
-	return time.Now().Add(utils.RandomDuration(1, 3))
+	return time.Now().UTC().Add(utils.RandomDurationMinutes(
+		constants.NotificationIntervalMinMinutes,
+		constants.NotificationIntervalMaxMinutes,
+	))
 }

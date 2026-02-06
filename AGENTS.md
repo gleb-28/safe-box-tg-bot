@@ -3,6 +3,9 @@
 ## Repo overview
 - Go 1.25 Telegram bot; entrypoints live in cmd/.
 - Business logic is under internal/feat; data access in internal/repo; shared types in models/.
+- Notifications run in a background worker under internal/feat/notify using NextNotification.
+- If NextNotification is overdue beyond the max interval (or zero), reschedule from now without sending.
+- Item box close message ID is stored on the user to delete stale "Шкатулка закрыта" after restarts.
 
 ## Coding guidelines
 - Run gofmt on any modified Go files.

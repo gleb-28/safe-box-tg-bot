@@ -2,6 +2,7 @@ package repo
 
 import (
 	"safeboxtgbot/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -33,4 +34,16 @@ func (r *MessageLogRepo) GetByUserAndItem(userID int64, itemID uint) ([]models.M
 		return nil, err
 	}
 	return logs, nil
+}
+
+func (r *MessageLogRepo) GetRecentItemIDs(userID int64, since time.Time) ([]uint, error) {
+	var ids []uint
+	if err := r.db.Model(&models.MessageLog{}).
+		Distinct("item_id").
+		Where("user_id = ? AND sent_at >= ?", userID, since).
+		Pluck("item_id", &ids).
+		Error; err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

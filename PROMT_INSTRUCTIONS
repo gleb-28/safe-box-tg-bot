@@ -21,10 +21,17 @@ Time logic
 - Each user has Timezone, DayStart, DayEnd, NextNotification.
 - Send only within DayStart → DayEnd.
 - Send nothing at night.
-- Interval is 1–3 hours with randomness; after send, compute a new NextNotification.
+- Interval is 60–180 minutes (1–3 hours) with randomness; after send, compute a new NextNotification.
+
+Notifications
+- Background worker checks users with NextNotification <= now (UTC).
+- Skip sends if no items or outside active hours; move NextNotification to the next allowed time.
+- For now, notifications send the item's name directly (no LLM).
+- If NextNotification is overdue beyond the max interval (or zero), recalculate it from now without sending.
+- Avoid repeating the same item within the cooldown window (last 360 minutes); if all items are recent, allow repeats.
 
 Data and models (GORM)
-- User: TelegramID, Mode, Timezone, DayStart, DayEnd, NextNotification, Items.
+- User: TelegramID, Mode, Timezone, DayStart, DayEnd, NextNotification, ItemBoxClosedMsgID, Items.
 - Item: UserID, Name.
 - MessageLog: UserID, ItemID, SentAt, Text.
 - MessageLog is for history, analysis, anti-repeats, and future personalization.
@@ -47,6 +54,7 @@ FSM and access
   - correct key → add user + greetings.
   - wrong key → error and return to initial.
 - Auth middleware: if user is not in DB, the bot is silent.
+- When closing the item box, send "Шкатулка закрыта" with the main menu keyboard and store the message ID to remove it on next open.
 
 LLM generation
 - Input: current_entity, time_of_day (morning/day/evening or empty), style_mode, random_seed.

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/feat/items"
@@ -37,6 +36,7 @@ func MustInitItemBoxButtons(bot *b.Bot) {
 }
 
 func OpenItemBox(bot *b.Bot, userID int64, sourceMsg *telebot.Message) error {
+	clearClosedItemBoxMessage(bot, userID)
 	bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
 	bot.ItemsService.ClearEditingItemName(userID)
 	return renderItemBox(bot, userID, sourceMsg)
@@ -115,13 +115,10 @@ func createCloseItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 		bot.ItemsService.ClearEditingItemName(userID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.InitialEvent)
 		bot.ItemsService.SetBotLastMsg(userID, nil)
-		msg := bot.MustSend(userID, bot.Replies.Done, MainMenuKeyboard())
+		clearClosedItemBoxMessage(bot, userID)
+		msg := bot.MustSend(userID, bot.Replies.ItemBoxClosed, MainMenuKeyboard())
+		saveClosedItemBoxMessage(bot, userID, msg)
 		bot.MustDelete(ctx.Message())
-
-		go func() {
-			time.Sleep(5 * time.Second)
-			bot.MustDelete(msg)
-		}()
 
 		return nil
 	}
@@ -356,4 +353,27 @@ func parseItemName(ctx telebot.Context) (string, error) {
 
 func respondSilently(ctx telebot.Context) {
 	_ = ctx.Respond()
+}
+
+func clearClosedItemBoxMessage(bot *b.Bot, userID int64) {
+	userDTO := bot.UserService.GetUser(userID)
+	if userDTO == nil || userDTO.ItemBoxClosedMsgID == 0 {
+		return
+	}
+	bot.MustDelete(&telebot.Message{
+		ID:   userDTO.ItemBoxClosedMsgID,
+		Chat: &telebot.Chat{ID: userID},
+	})
+	if err := bot.UserService.UpdateItemBoxClosedMsgID(userID, 0); err != nil {
+		bot.Logger.Error(fmt.Sprintf("Error clearing closed item box message for userID=%d: %v", userID, err))
+	}
+}
+
+func saveClosedItemBoxMessage(bot *b.Bot, userID int64, msg *telebot.Message) {
+	if msg == nil {
+		return
+	}
+	if err := bot.UserService.UpdateItemBoxClosedMsgID(userID, msg.ID); err != nil {
+		bot.Logger.Error(fmt.Sprintf("Error saving closed item box message for userID=%d: %v", userID, err))
+	}
 }

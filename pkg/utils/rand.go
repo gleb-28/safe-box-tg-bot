@@ -5,7 +5,21 @@ import (
 	"time"
 )
 
-func RandomDuration(minHours, maxHours int) time.Duration {
-	delta := rand.Intn(maxHours*60-minHours*60+1) + minHours*60
+func RandomIntRange(min, max int) int {
+	if max < min {
+		return min
+	}
+	return rand.Intn(max-min+1) + min
+}
+
+func RandomIndex(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	return rand.Intn(n)
+}
+
+func RandomDurationMinutes(minMinutes, maxMinutes int) time.Duration {
+	delta := RandomIntRange(minMinutes, maxMinutes)
 	return time.Duration(delta) * time.Minute
 }
