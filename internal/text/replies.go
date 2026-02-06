@@ -8,7 +8,7 @@ type Replies struct {
 	EnterKeyWrong     string
 	Error             string
 
-	Done string
+	ItemBoxClosed string
 
 	AddNewItem          string
 	WriteNewItemName    string
@@ -38,7 +38,7 @@ func NewReplies() *Replies {
 		EnterKeyWrong:     "Неверный ключ",
 		Error:             "Произошла ошибка :(",
 
-		Done: "Готово 😎",
+		ItemBoxClosed: "Шкатулка закрыта 🔒",
 
 		AddNewItem:          "✍️ Напиши новую вещь 👇",
 		WriteNewItemName:    "✏️ Напиши новое имя 👇",

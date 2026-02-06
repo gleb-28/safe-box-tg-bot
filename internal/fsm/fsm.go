@@ -2,6 +2,7 @@ package fsmManager
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"safeboxtgbot/internal/core/logger"
 	"sync"
@@ -56,10 +57,10 @@ var events = []f.EventDesc{
 		},
 		Dst: StateItemsMenuOpened,
 	},
-	{Name: AwaitingItemAddEvent, Src: []string{StateItemsMenuOpened}, Dst: StateAwaitingItemAdd},
-	{Name: ItemEditSelectOpenedEvent, Src: []string{StateItemsMenuOpened}, Dst: StateItemEditSelectOpened},
-	{Name: AwaitingItemEditEvent, Src: []string{StateItemEditSelectOpened}, Dst: StateAwaitingItemEdit},
-	{Name: ItemDeleteSelectOpenedEvent, Src: []string{StateItemsMenuOpened}, Dst: StateItemDeleteSelectOpened},
+	{Name: AwaitingItemAddEvent, Src: []string{StateInitial, StateItemsMenuOpened}, Dst: StateAwaitingItemAdd},
+	{Name: ItemEditSelectOpenedEvent, Src: []string{StateInitial, StateItemsMenuOpened}, Dst: StateItemEditSelectOpened},
+	{Name: AwaitingItemEditEvent, Src: []string{StateInitial, StateItemEditSelectOpened}, Dst: StateAwaitingItemEdit},
+	{Name: ItemDeleteSelectOpenedEvent, Src: []string{StateInitial, StateItemsMenuOpened}, Dst: StateItemDeleteSelectOpened},
 }
 
 type FSMState struct {
@@ -108,6 +109,11 @@ func (fsm *FSMState) UserEvent(ctx context.Context, chatId int64, event string, 
 	userFSM := fsm.GetFSMForUser(chatId)
 	err := userFSM.Event(ctx, event, args...)
 	if err != nil {
+		var noTransition f.NoTransitionError
+		if errors.As(err, &noTransition) {
+			fsm.logger.Debug(fmt.Sprintf("User %d - No transition for event '%s' in state '%s'\n", chatId, event, userFSM.Current()))
+			return
+		}
 		fsm.logger.Error(err.Error())
 	}
 }

@@ -10,13 +10,14 @@ type UserMode string
 
 type User struct {
 	gorm.Model
-	TelegramID       int64     `gorm:"uniqueIndex"`
-	Mode             UserMode  `gorm:"not null;default:'COZY_MODE'"`
-	Timezone         string    `gorm:"not null;default:'Europe/Moscow'"`
-	DayStart         int16     `gorm:"not null;default:720;check:day_start >= 0 AND day_start <= 1440"` // minutes form start day: 12 * 60 = 720 (12:00)
-	DayEnd           int16     `gorm:"not null;default:1320;check:day_end >= 0 AND day_end <= 1440"`    // minutes form start day: 22 * 60 = 1320 (22:00)
-	NextNotification time.Time `gorm:"index"`
-	Items            []Item
+	TelegramID         int64     `gorm:"uniqueIndex"`
+	Mode               UserMode  `gorm:"not null;default:'COZY_MODE'"`
+	Timezone           string    `gorm:"not null;default:'Europe/Moscow'"`
+	DayStart           int16     `gorm:"not null;default:720;check:day_start >= 0 AND day_start <= 1440"` // minutes form start day: 12 * 60 = 720 (12:00)
+	DayEnd             int16     `gorm:"not null;default:1320;check:day_end >= 0 AND day_end <= 1440"`    // minutes form start day: 22 * 60 = 1320 (22:00)
+	NextNotification   time.Time `gorm:"index"`
+	ItemBoxClosedMsgID int       `gorm:"not null;default:0"`
+	Items              []Item
 }
 
 type Item struct {

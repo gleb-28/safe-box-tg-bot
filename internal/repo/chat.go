@@ -2,6 +2,7 @@ package repo
 
 import (
 	"safeboxtgbot/models"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -27,5 +28,12 @@ func (r *UserRepo) Upsert(user *models.User) error {
 	return r.db.Where("telegram_id = ?", user.TelegramID).
 		Assign(user).
 		FirstOrCreate(user).
+		Error
+}
+
+func (r *UserRepo) UpdateItemBoxClosedMsgID(telegramID int64, msgID int) error {
+	return r.db.Model(&models.User{}).
+		Where("telegram_id = ?", telegramID).
+		Update("item_box_closed_msg_id", msgID).
 		Error
 }
