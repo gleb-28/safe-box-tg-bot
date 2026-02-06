@@ -10,18 +10,56 @@ import (
 )
 
 const (
-	StateInitial     = "initial"
-	StateAwaitingKey = "awaiting_key"
+	StateInitial                = "initial"
+	StateAwaitingKey            = "awaiting_key"
+	StateItemsMenuOpened        = "items_menu_opened"
+	StateAwaitingItemAdd        = "awaiting_items_add"
+	StateItemEditSelectOpened   = "item_edit_select_opened"
+	StateAwaitingItemEdit       = "awaiting_item_edit"
+	StateItemDeleteSelectOpened = "item_delete_select_opened"
 )
 
 const (
-	InitialEvent     = "initial__event"
-	AwaitingKeyEvent = "awaiting_key__event"
+	InitialEvent                = "initial__event"
+	AwaitingKeyEvent            = "awaiting_key__event"
+	ItemsMenuOpenedEvent        = "items_menu_opened__event"
+	AwaitingItemAddEvent        = "awaiting_item_add__event"
+	ItemEditSelectOpenedEvent   = "item_edit_select_opened__event"
+	AwaitingItemEditEvent       = "awaiting_item_edit__event"
+	ItemDeleteSelectOpenedEvent = "item_delete_select_opened__event"
 )
 
 var events = []f.EventDesc{
-	{Name: InitialEvent, Src: []string{StateInitial, StateAwaitingKey}, Dst: StateInitial},
+	{
+		Name: InitialEvent,
+		Src: []string{
+			StateInitial,
+			StateAwaitingKey,
+			StateItemsMenuOpened,
+			StateAwaitingItemAdd,
+			StateItemEditSelectOpened,
+			StateAwaitingItemEdit,
+			StateItemDeleteSelectOpened,
+		},
+		Dst: StateInitial,
+	},
 	{Name: AwaitingKeyEvent, Src: []string{StateInitial}, Dst: StateAwaitingKey},
+	{
+		Name: ItemsMenuOpenedEvent,
+		Src: []string{
+			StateInitial,
+			StateItemsMenuOpened,
+			StateAwaitingItemAdd,
+			StateItemEditSelectOpened,
+			StateAwaitingItemEdit,
+			StateItemDeleteSelectOpened,
+		},
+		Dst: StateItemsMenuOpened,
+	},
+	{Name: AwaitingItemAddEvent, Src: []string{StateItemsMenuOpened}, Dst: StateAwaitingItemAdd},
+	{Name: ItemEditSelectOpenedEvent, Src: []string{StateItemsMenuOpened}, Dst: StateItemEditSelectOpened},
+	{Name: AwaitingItemEditEvent, Src: []string{StateItemEditSelectOpened}, Dst: StateAwaitingItemEdit},
+	{Name: ItemDeleteSelectOpenedEvent, Src: []string{StateItemsMenuOpened}, Dst: StateItemDeleteSelectOpened},
 }
 
 type FSMState struct {

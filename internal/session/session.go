@@ -14,10 +14,17 @@ type Session struct {
 	UserIsLoaded bool
 	UserLastMsg  *telebot.Message
 	BotLastMsg   *telebot.Message
+	Items        ItemsState
+}
+
+type ItemsState struct {
+	EditingItemName string
+	ItemsLoaded     bool
+	ItemList        []models.Item
 }
 type Store struct {
-	mu       sync.RWMutex
 	sessions map[int64]*Session
+	mu       sync.RWMutex
 	logger   logger.AppLogger
 }
 
@@ -44,6 +51,9 @@ func (store *Store) Get(userID int64) *Session {
 
 	session = &Session{
 		User: &models.User{},
+		Items: ItemsState{
+			ItemList: make([]models.Item, 0),
+		},
 	}
 	store.sessions[userID] = session
 	store.logger.Info(fmt.Sprintf("New session created for userID=%d", userID))
@@ -76,4 +86,48 @@ func (store *Store) UpdateUser(userID int64, user *models.User) {
 		s.UserIsLoaded = true
 	})
 	store.logger.Debug(fmt.Sprintf("Session user updated for userID=%d", userID))
+}
+
+func (store *Store) SetBotLastMsg(userID int64, msg *telebot.Message) {
+	store.Update(userID, func(sess *Session) {
+		sess.BotLastMsg = msg
+	})
+}
+
+func (store *Store) GetBotLastMsg(userID int64) *telebot.Message {
+	return store.Get(userID).BotLastMsg
+}
+
+func (store *Store) IsItemsLoaded(userID int64) bool {
+	return store.Get(userID).Items.ItemsLoaded
+}
+
+func (store *Store) GetItemList(userID int64) []models.Item {
+	session := store.Get(userID)
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	return session.Items.ItemList
+}
+
+func (store *Store) SetItemList(userID int64, items []models.Item) {
+	store.Update(userID, func(sess *Session) {
+		sess.Items.ItemList = items
+		sess.Items.ItemsLoaded = true
+	})
+}
+
+func (store *Store) GetEditingItemName(userID int64) string {
+	return store.Get(userID).Items.EditingItemName
+}
+
+func (store *Store) SetEditingItemName(userID int64, itemName string) {
+	store.Update(userID, func(sess *Session) {
+		sess.Items.EditingItemName = itemName
+	})
+}
+
+func (store *Store) ClearEditingItemName(userID int64) {
+	store.Update(userID, func(sess *Session) {
+		sess.Items.EditingItemName = ""
+	})
 }

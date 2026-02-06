@@ -13,6 +13,7 @@
 ## Data and storage
 - Use GORM for persistence and keep DB queries in internal/repo.
 - Add gorm tags for new models and keep defaults/checks explicit.
+- Item identity is per-user and keyed by normalized name (max 40 chars, 200 items/user).
 
 ## Testing
 - Use package-local *_test.go files; prefer table tests when practical.

@@ -66,9 +66,7 @@ func (s *Service) UpdateNextNotification(userID int64, t time.Time) {
 
 func (s *Service) UpdateItems(userID int64, items []models.Item) error {
 	s.ensureUserSessionLoaded(userID)
-	s.store.Update(userID, func(sess *session.Session) {
-		sess.User.Items = items
-	})
+	s.store.SetItemList(userID, items)
 
 	for _, item := range items {
 		item.UserID = userID

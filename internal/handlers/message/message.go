@@ -3,6 +3,7 @@ package message
 import (
 	b "safeboxtgbot/internal"
 	fsmManager "safeboxtgbot/internal/fsm"
+	"safeboxtgbot/internal/handlers/keyboard"
 
 	"gopkg.in/telebot.v4"
 )
@@ -21,6 +22,10 @@ func createMessageHandler(bot *b.Bot) telebot.HandlerFunc {
 			return nil
 		case fsmManager.StateAwaitingKey:
 			return createValidateActivationKey(bot)(ctx)
+		case fsmManager.StateAwaitingItemAdd:
+			return keyboard.CreateValidateAddItemHandler(bot)(ctx)
+		case fsmManager.StateAwaitingItemEdit:
+			return keyboard.CreateValidateEditItemHandler(bot)(ctx)
 		default:
 			return nil
 		}

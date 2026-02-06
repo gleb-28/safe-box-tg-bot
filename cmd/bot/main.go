@@ -5,9 +5,11 @@ import (
 	"safeboxtgbot/internal/core/config"
 	l "safeboxtgbot/internal/core/logger"
 	d "safeboxtgbot/internal/db"
+	"safeboxtgbot/internal/feat/items"
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/handlers/commands"
+	"safeboxtgbot/internal/handlers/keyboard"
 	"safeboxtgbot/internal/handlers/message"
 	"safeboxtgbot/internal/repo"
 	"safeboxtgbot/internal/session"
@@ -28,11 +30,13 @@ func main() {
 	messageLogRepo := repo.NewMessageLogRepo(db)
 
 	userService := user.NewUserService(userRepo, itemRepo, messageLogRepo, sessionStore, logger)
+	itemsService := items.NewService(itemRepo, sessionStore, logger)
 
 	replies := text.NewReplies()
-	bot := b.MustBot(cfg, fsm, userService, replies, logger)
+	bot := b.MustBot(cfg, fsm, userService, itemsService, replies, logger)
 
 	commands.MustInitCommandsHandler(bot)
+	keyboard.MustInitKeyboardHandler(bot)
 	message.MustInitMessagesHandler(bot)
 
 	logger.Info("Bot successfully started!")

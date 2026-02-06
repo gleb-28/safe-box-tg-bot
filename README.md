@@ -7,6 +7,11 @@ Safe Box is a Telegram bot that sends short, human-like nudges during the day ba
 (rofl/cozy/care) and are delivered only within the user's day window, with randomized 1–3 hour intervals.
 Access is gated by an activation key.
 
+## 🔒 Limits
+
+- Max items per user: 200.
+- Item names are normalized (trimmed, lowercased, collapsed spaces) and limited to 40 characters.
+
 ## 🧱 Tech stack
 
 - **Go 1.25** – primary language.

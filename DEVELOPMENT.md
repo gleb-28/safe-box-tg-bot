@@ -53,6 +53,10 @@ gofmt -w <file.go>
 ## Debugging
 Set `IS_DEBUG=true` in `.env` to enable debug logs.
 
+## Item constraints
+- Names are normalized (trim, lowercase, collapse spaces) and limited to 40 characters.
+- Max 200 items per user; identity is per-user by name.
+
 ## Architecture pointers
 - Models: `models/`
 - Repos (GORM only): `internal/repo/`

@@ -23,12 +23,21 @@ func (r *ItemRepo) GetByTelegramID(userID int64) ([]models.Item, error) {
 }
 
 func (r *ItemRepo) Upsert(item *models.Item) error {
-	return r.db.Where("id = ?", item.ID).
+	return r.db.Where("user_id = ? AND name = ?", item.UserID, item.Name).
 		Assign(item).
 		FirstOrCreate(item).
 		Error
 }
 
-func (r *ItemRepo) Delete(itemID uint) error {
-	return r.db.Delete(&models.Item{}, itemID).Error
+func (r *ItemRepo) UpdateName(userID int64, oldName string, newName string) (bool, error) {
+	result := r.db.Model(&models.Item{}).
+		Where("user_id = ? AND name = ?", userID, oldName).
+		Update("name", newName)
+	return result.RowsAffected > 0, result.Error
+}
+
+func (r *ItemRepo) DeleteByName(userID int64, name string) (bool, error) {
+	result := r.db.Where("user_id = ? AND name = ?", userID, name).
+		Delete(&models.Item{})
+	return result.RowsAffected > 0, result.Error
 }

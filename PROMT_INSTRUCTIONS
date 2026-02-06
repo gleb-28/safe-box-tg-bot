@@ -29,6 +29,10 @@ Data and models (GORM)
 - MessageLog: UserID, ItemID, SentAt, Text.
 - MessageLog is for history, analysis, anti-repeats, and future personalization.
 
+Item constraints
+- Item names are normalized (trim, lowercase, collapse spaces) and limited to 40 characters.
+- Max items per user: 200.
+
 Layered architecture
 - Models: GORM structs only.
 - Repo: thin GORM wrappers with no business logic.
@@ -37,7 +41,7 @@ Layered architecture
 - Do not auto-create users — only via activation key.
 
 FSM and access
-- FSM states: initial, awaiting_key.
+- FSM states: initial, awaiting_key, items_menu_opened, awaiting_item_add, item_edit_select_opened, awaiting_item_edit, item_delete_select_opened.
 - /key moves to awaiting_key and asks for the key.
 - In awaiting_key, text validates the key:
   - correct key → add user + greetings.

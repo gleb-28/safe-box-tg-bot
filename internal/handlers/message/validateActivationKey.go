@@ -4,6 +4,7 @@ import (
 	"context"
 	b "safeboxtgbot/internal"
 	fsmManager "safeboxtgbot/internal/fsm"
+	"safeboxtgbot/internal/handlers/keyboard"
 
 	"gopkg.in/telebot.v4"
 )
@@ -20,7 +21,7 @@ func createValidateActivationKey(bot *b.Bot) telebot.HandlerFunc {
 				return nil
 			}
 			bot.MustSend(userId, bot.Replies.EnterKeySuccess)
-			bot.MustSend(userId, bot.Replies.Start)
+			bot.MustSend(userId, bot.Replies.Start, keyboard.MainMenuKeyboard())
 			bot.Fsm.UserEvent(context.Background(), userId, fsmManager.InitialEvent)
 			return nil
 		}

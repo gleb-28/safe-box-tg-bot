@@ -5,6 +5,7 @@ import (
 	"log"
 	"safeboxtgbot/internal/core/config"
 	"safeboxtgbot/internal/core/logger"
+	"safeboxtgbot/internal/feat/items"
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/text"
@@ -16,25 +17,26 @@ import (
 
 type Bot struct {
 	*telebot.Bot
-	Fsm         *fsmManager.FSMState
-	UserService *user.Service
-	Config      *config.AppConfig
-	Replies     *text.Replies
-	Logger      logger.AppLogger
+	Fsm          *fsmManager.FSMState
+	UserService  *user.Service
+	ItemsService *items.Service
+	Config       *config.AppConfig
+	Replies      *text.Replies
+	Logger       logger.AppLogger
 }
 
-func (bot *Bot) MustSend(chatId int64, what interface{}, opts ...interface{}) *telebot.Message {
-	msg, err := bot.Send(&telebot.User{ID: chatId}, what, opts...)
+func (bot *Bot) MustSend(userID int64, what interface{}, opts ...interface{}) *telebot.Message {
+	msg, err := bot.Send(&telebot.User{ID: userID}, what, opts...)
 	if err != nil {
-		bot.Logger.Error(fmt.Sprintf("Error sending message to %v: %v", chatId, err.Error()))
+		bot.Logger.Error(fmt.Sprintf("Error sending message to %v: %v", userID, err.Error()))
 	}
 	return msg
 }
 
-func (bot *Bot) MustSendAlbum(chatID int64, album telebot.Album) []telebot.Message {
-	msg, err := bot.Bot.SendAlbum(&telebot.Chat{ID: chatID}, album)
+func (bot *Bot) MustSendAlbum(userID int64, album telebot.Album) []telebot.Message {
+	msg, err := bot.Bot.SendAlbum(&telebot.Chat{ID: userID}, album)
 	if err != nil {
-		bot.Logger.Error(fmt.Sprintf("Error sending album to %v: %v", chatID, err.Error()))
+		bot.Logger.Error(fmt.Sprintf("Error sending album to %v: %v", userID, err.Error()))
 	}
 	return msg
 }
@@ -60,6 +62,7 @@ func MustBot(
 	config *config.AppConfig,
 	fsm *fsmManager.FSMState,
 	userService *user.Service,
+	itemsService *items.Service,
 	replies *text.Replies,
 	logger logger.AppLogger) *Bot {
 	bot, err := telebot.NewBot(telebot.Settings{
@@ -78,6 +81,7 @@ func MustBot(
 		bot,
 		fsm,
 		userService,
+		itemsService,
 		config,
 		replies,
 		logger,
