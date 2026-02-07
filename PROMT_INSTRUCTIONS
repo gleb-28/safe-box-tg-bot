@@ -21,10 +21,11 @@ Time logic
 - Each user has Timezone, DayStart, DayEnd, NextNotification.
 - Send only within DayStart → DayEnd.
 - Send nothing at night.
+- DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
 - Interval is 60–180 minutes (1–3 hours) with randomness; after send, compute a new NextNotification.
 
 Notifications
-- Background worker checks users with NextNotification <= now (UTC).
+- Background worker runs once on startup, then checks users with NextNotification <= now (UTC).
 - Skip sends if no items or outside active hours; move NextNotification to the next allowed time.
 - For now, notifications send the item's name directly (no LLM).
 - If NextNotification is overdue beyond the max interval (or zero), recalculate it from now without sending.

@@ -9,6 +9,9 @@ Access is gated by an activation key.
 
 Note: notifications currently send the item name directly (LLM generation is planned).
 
+Active hours are stored as DayStart/DayEnd minutes in 24-hour format; the notification worker runs once on startup
+and then periodically to process due users.
+
 ## 🔒 Limits
 
 - Max items per user: 200.

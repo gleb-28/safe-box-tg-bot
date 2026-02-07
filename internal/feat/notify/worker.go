@@ -45,6 +45,10 @@ func (w *Worker) Start(ctx context.Context) {
 	ticker := time.NewTicker(time.Duration(constants.NotificationCheckIntervalMinutes) * time.Minute)
 	defer ticker.Stop()
 
+	if ctx.Err() == nil {
+		w.processSafe()
+	}
+
 	for {
 		select {
 		case <-ticker.C:
@@ -256,6 +260,7 @@ func isWithinActiveWindow(user models.User, local time.Time) bool {
 	start := int(user.DayStart)
 	end := int(user.DayEnd)
 
+	// DayStart/DayEnd are minutes in 24h format; equal values should be prevented by validation.
 	if start <= end {
 		return minutes >= start && minutes <= end
 	}

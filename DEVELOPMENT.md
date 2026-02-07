@@ -54,8 +54,9 @@ gofmt -w <file.go>
 Set `IS_DEBUG=true` in `.env` to enable debug logs.
 
 ## Notifications
-- The notification worker starts automatically with the bot and uses `NextNotification` in UTC.
+- The notification worker starts automatically with the bot, runs once immediately, and uses `NextNotification` in UTC.
 - Messages are sent only within DayStart/DayEnd in the user's timezone.
+- DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
 - If `NextNotification` is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Randomized interval is 60–180 minutes (1–3 hours), stored/treated in minutes across the system.
 
