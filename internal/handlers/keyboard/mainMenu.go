@@ -2,7 +2,7 @@ package keyboard
 
 import "gopkg.in/telebot.v4"
 
-const OpenItemBoxLabel = "Моя Шкатулка 🗃"
+const OpenItemBoxLabel = "Открыть 👀"
 
 func MainMenuKeyboard() *telebot.ReplyMarkup {
 	markup := &telebot.ReplyMarkup{
