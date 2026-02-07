@@ -11,4 +11,5 @@ services:
       IS_DOCKERIZED: "true"
     volumes:
       - ../data/bot.db:/app/data
+      - ../data/prompt:/app/data/prompt
     working_dir: /app
