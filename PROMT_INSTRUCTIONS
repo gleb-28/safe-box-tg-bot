@@ -27,7 +27,7 @@ Time logic
 Notifications
 - Background worker runs once on startup, then checks users with NextNotification <= now (UTC).
 - Skip sends if no items or outside active hours; move NextNotification to the next allowed time.
-- For now, notifications send the item's name directly (no LLM).
+- Notifications use LLM generation; if it fails, send the item's name plus an emoji.
 - If NextNotification is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Avoid repeating the same item within the cooldown window (last 360 minutes); if all items are recent, allow repeats.
 
@@ -59,12 +59,13 @@ FSM and access
 
 LLM generation
 - Input: current_entity, time_of_day (morning/day/evening or empty), style_mode, random_seed.
-- Output: JSON {"text":"..."}.
+- Output: free-form text in Russian, following style rules; prompt builder + LLM service are wired via a message generator.
 - Must mention the entity and respect the style.
+- Prompt template is loaded from PROMPT_PATH (default: data/prompt).
 
 Tech stack (for integration)
 - Go, Telebot v4, Looplab FSM, GORM + SQLite, cleanenv.
-- Config via env/.env (TG_BOT_TOKEN, ACTIVATION_KEY, MODEL_API_KEY, DB_FILE_NAME).
+- Config via env/.env (TG_BOT_TOKEN, ACTIVATION_KEY, MODEL_API_KEY, MODEL_NAME, PROMPT_PATH, DB_FILE_NAME).
 
 Working rules for changes
 - Load the user into the session first, then update fields.

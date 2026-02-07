@@ -3,12 +3,14 @@ package notify
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/core/constants"
 	"safeboxtgbot/internal/core/logger"
 	"safeboxtgbot/internal/feat/items"
+	"safeboxtgbot/internal/feat/prompt"
 	"safeboxtgbot/internal/feat/user"
 	"safeboxtgbot/internal/repo"
 	"safeboxtgbot/models"
@@ -18,26 +20,29 @@ import (
 )
 
 type Worker struct {
-	userService    *user.Service
-	itemsService   *items.Service
-	messageLogRepo *repo.MessageLogRepo
-	bot            *b.Bot
-	logger         logger.AppLogger
+	userService      *user.Service
+	itemsService     *items.Service
+	messageLogRepo   *repo.MessageLogRepo
+	messageGenerator prompt.MessageGenerator
+	bot              *b.Bot
+	logger           logger.AppLogger
 }
 
 func NewWorker(
 	userService *user.Service,
 	itemsService *items.Service,
 	messageLogRepo *repo.MessageLogRepo,
+	messageGenerator prompt.MessageGenerator,
 	bot *b.Bot,
 	logger logger.AppLogger,
 ) *Worker {
 	return &Worker{
-		userService:    userService,
-		itemsService:   itemsService,
-		messageLogRepo: messageLogRepo,
-		bot:            bot,
-		logger:         logger,
+		userService:      userService,
+		itemsService:     itemsService,
+		messageLogRepo:   messageLogRepo,
+		messageGenerator: messageGenerator,
+		bot:              bot,
+		logger:           logger,
 	}
 }
 
@@ -123,7 +128,15 @@ func (w *Worker) processUser(nowUTC time.Time, user models.User) {
 		return
 	}
 
-	text := item.Name
+	text := fallbackText(item.Name)
+	if w.messageGenerator != nil {
+		generated, err := w.generateText(nowUTC, user, *item)
+		if err != nil {
+			w.logger.Error(fmt.Sprintf("Error generating message for userID=%d: %v", user.TelegramID, err))
+		} else if strings.TrimSpace(generated) != "" {
+			text = generated
+		}
+	}
 	w.logger.Debug(fmt.Sprintf("UserID=%d selected itemID=%d name=%q", user.TelegramID, item.ID, item.Name))
 	if err := w.send(user.TelegramID, text); err != nil {
 		w.updateNextNotification(user, w.retryAt(nowUTC))
@@ -195,6 +208,20 @@ func (w *Worker) updateNextNotification(user models.User, next time.Time) {
 	if err := w.userService.UpdateNextNotification(user.TelegramID, next); err != nil {
 		w.logger.Error(fmt.Sprintf("Error updating next notification for userID=%d: %v", user.TelegramID, err))
 	}
+}
+
+func (w *Worker) generateText(nowUTC time.Time, user models.User, item models.Item) (string, error) {
+	loc := w.userLocation(user)
+	localNow := nowUTC.In(loc)
+	input := prompt.LLMInput{
+		CurrentEntity: item.Name,
+		TimeOfDay:     timeOfDay(localNow),
+		StyleMode:     modeToStyle(user.Mode),
+		RandomSeed:    utils.RandomIntRange(1, 1_000_000),
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	return w.messageGenerator.Generate(ctx, input)
 }
 
 func (w *Worker) retryAt(nowUTC time.Time) time.Time {
@@ -286,4 +313,48 @@ func (w *Worker) userLocation(user models.User) *time.Location {
 		return time.UTC
 	}
 	return loc
+}
+
+func fallbackText(name string) string {
+	trimmed := strings.TrimSpace(name)
+	emoji := ""
+	if len(fallbackEmojis) > 0 {
+		emoji = fallbackEmojis[utils.RandomIndex(len(fallbackEmojis))]
+	}
+	if trimmed == "" {
+		return strings.TrimSpace(emoji)
+	}
+	if emoji == "" {
+		return trimmed
+	}
+	return trimmed + " " + emoji
+}
+
+var fallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
+
+func modeToStyle(mode models.UserMode) string {
+	switch mode {
+	case constants.RoflMode:
+		return "rofl"
+	case constants.CareMode:
+		return "care"
+	case constants.CozyMode:
+		return "cozy"
+	default:
+		return "cozy"
+	}
+}
+
+func timeOfDay(local time.Time) string {
+	hour := local.Hour()
+	switch {
+	case hour >= 5 && hour < 12:
+		return "morning"
+	case hour >= 12 && hour < 18:
+		return "day"
+	case hour >= 18 && hour < 23:
+		return "evening"
+	default:
+		return ""
+	}
 }

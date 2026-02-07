@@ -13,6 +13,8 @@ type AppConfig struct {
 	AdminID        int64          `env:"ADMIN_ID" env-required:"true"`
 	ActivationKey  string         `env:"ACTIVATION_KEY" env-required:"true"`
 	ModelApiKey    string         `env:"MODEL_API_KEY" env-required:"true"`
+	ModelName      string         `env:"MODEL_NAME" env-default:"openrouter/auto"`
+	PromptPath     string         `env:"PROMPT_PATH" env-default:"data/prompt"`
 	IsDebug        bool           `env:"IS_DEBUG" env-default:"false"`
 	Database       DatabaseConfig `env-required:"true"`
 }

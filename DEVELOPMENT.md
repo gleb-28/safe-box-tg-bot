@@ -17,6 +17,7 @@ This file covers local development for Safe Box TG Bot.
    - `ACTIVATION_KEY`
    - `DB_FILE_NAME` (default `./data/bot.db`)
    - `MODEL_API_KEY`
+   - `MODEL_NAME` (optional, default `openrouter/auto`)
 3) Ensure the DB directory exists:
    ```bash
    mkdir -p data
@@ -57,6 +58,7 @@ Set `IS_DEBUG=true` in `.env` to enable debug logs.
 - The notification worker starts automatically with the bot, runs once immediately, and uses `NextNotification` in UTC.
 - Messages are sent only within DayStart/DayEnd in the user's timezone.
 - DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
+- Notifications use LLM generation (prompt from PROMPT_PATH, default `data/prompt`) via a message generator (prompt builder + LLM client); if it fails, the item name plus an emoji is sent as a fallback.
 - If `NextNotification` is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Randomized interval is 60–180 minutes (1–3 hours), stored/treated in minutes across the system.
 

@@ -8,6 +8,7 @@ import (
 	d "safeboxtgbot/internal/db"
 	"safeboxtgbot/internal/feat/items"
 	"safeboxtgbot/internal/feat/notify"
+	"safeboxtgbot/internal/feat/prompt"
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/handlers/commands"
@@ -41,7 +42,12 @@ func main() {
 	keyboard.MustInitKeyboardHandler(bot)
 	message.MustInitMessagesHandler(bot)
 
-	notifyWorker := notify.NewWorker(userService, itemsService, messageLogRepo, bot, logger)
+	llmClient := prompt.MustNewOpenRouterClient(cfg.ModelApiKey, logger)
+	llmService := prompt.MustNewLLMService(llmClient, cfg.ModelName, logger)
+	promptBuilder := prompt.MustNewPromptBuilder(cfg.PromptPath, logger)
+	messageGenerator := prompt.MustNewMessageGenerator(promptBuilder, llmService, logger)
+
+	notifyWorker := notify.NewWorker(userService, itemsService, messageLogRepo, messageGenerator, bot, logger)
 	go notifyWorker.Start(context.Background())
 
 	logger.Info("Bot successfully started!")

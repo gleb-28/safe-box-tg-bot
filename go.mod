@@ -5,6 +5,7 @@ go 1.25
 require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/looplab/fsm v1.0.3
+	github.com/revrost/go-openrouter v1.1.5
 	gopkg.in/telebot.v4 v4.0.0-beta.7
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1

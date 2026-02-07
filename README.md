@@ -7,10 +7,10 @@ Safe Box is a Telegram bot that sends short, human-like nudges during the day ba
 (rofl/cozy/care) and are delivered only within the user's day window, with randomized 60–180 minute (1–3 hour) intervals.
 Access is gated by an activation key.
 
-Note: notifications currently send the item name directly (LLM generation is planned).
-
 Active hours are stored as DayStart/DayEnd minutes in 24-hour format; the notification worker runs once on startup
 and then periodically to process due users.
+
+LLM requests go through OpenRouter using the prompt in `data/prompt`; if generation fails, the item name plus an emoji is sent as a fallback.
 
 ## 🔒 Limits
 
@@ -48,6 +48,8 @@ ADMIN_ID=                  # REQUIRED - Telegram admin user ID
 ACTIVATION_KEY=            # REQUIRED - password to use the bot
 DB_FILE_NAME=./data/bot.db # REQUIRED - SQLite db file (*.db)
 MODEL_API_KEY=             # REQUIRED - OpenRouter Model API key 
+MODEL_NAME=openrouter/auto # OPTIONAL - OpenRouter model name
+PROMPT_PATH=./data/prompt  # OPTIONAL - LLM prompt file path
 IS_DEBUG=false             # OPTIONAL - print logs for debugging
 ```
 ## 📁 Project commands

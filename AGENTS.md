@@ -6,6 +6,7 @@
 - Notifications run in a background worker under internal/feat/notify using NextNotification.
 - If NextNotification is overdue beyond the max interval (or zero), reschedule from now without sending.
 - Item box close message ID is stored on the user to delete stale "Шкатулка закрыта" after restarts.
+- LLM wiring: Prompt builder reads the template (PROMPT_PATH) and returns plain text via a message generator orchestrating prompt+LLM.
 
 ## Coding guidelines
 - Run gofmt on any modified Go files.
