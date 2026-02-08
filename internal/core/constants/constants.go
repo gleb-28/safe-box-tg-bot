@@ -14,11 +14,17 @@ const (
 )
 
 const (
-	NotificationCheckIntervalMinutes = 5
-	NotificationIntervalMinMinutes   = 40
-	NotificationIntervalMaxMinutes   = 150
-	NotificationRetryMinutes         = 10
-	NotificationItemCooldownMinutes  = 360
+	NotificationCheckIntervalMinutes      = 5
+	DefaultNotificationIntervalMinMinutes = 60
+	DefaultNotificationIntervalMaxMinutes = 120
+	NotificationRetryMinutes              = 10
+	NotificationItemCooldownMinutes       = 360
 )
 
 var FallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
+
+const (
+	DefaultDayStartMinutes = 720  // 12:00
+	DefaultDayEndMinutes   = 1320 // 22:00
+	DefaultTimezone        = "Europe/Moscow"
+)

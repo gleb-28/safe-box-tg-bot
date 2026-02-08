@@ -10,8 +10,10 @@ type Replies struct {
 
 	ItemBoxClosed string
 
-	ChangeModePrompt  string
-	ChangeModeUpdated string
+	ChangeModePrompt      string
+	ChangeModeUpdated     string
+	ChangeIntervalPrompt  string
+	ChangeIntervalUpdated string
 
 	AddNewItem          string
 	WriteNewItemName    string
@@ -43,8 +45,10 @@ func NewReplies() *Replies {
 
 		ItemBoxClosed: "Шкатулка закрыта 🔒",
 
-		ChangeModePrompt:  "Выбери режим (сейчас: \"%s\")",
-		ChangeModeUpdated: "Режим переключён на \"%s\" ✅",
+		ChangeModePrompt:      "Выбери режим (сейчас: \"%s\")",
+		ChangeModeUpdated:     "Режим переключён на \"%s\" ✅",
+		ChangeIntervalPrompt:  "Выбери частоту напоминаний (сейчас: \"%s\")",
+		ChangeIntervalUpdated: "Частота переключена на \"%s\" (%s) ✅",
 
 		AddNewItem:          "✍️ Напиши новую вещь 👇",
 		WriteNewItemName:    "✏️ Напиши новое имя 👇",

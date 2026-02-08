@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"safeboxtgbot/internal/core/constants"
 	"safeboxtgbot/internal/core/logger"
+	"safeboxtgbot/internal/helpers"
 	"safeboxtgbot/internal/repo"
 	"safeboxtgbot/internal/session"
 	"safeboxtgbot/models"
-	"safeboxtgbot/pkg/utils"
 	"time"
 )
 
@@ -46,12 +46,24 @@ func (s *Service) GetUser(userID int64) *models.User {
 
 func (s *Service) AddUser(userID int64) error {
 	s.ensureUserSessionLoaded(userID)
-	nextNotification := s.getNextRandNotification()
+	preset := s.defaultPreset()
 	s.store.Update(userID, func(sess *session.Session) {
 		sess.User.TelegramID = userID
+		sess.User.NotificationPreset = preset.Key
+		sess.User.NotificationIntervalMinMinutes = int16(preset.MinMinutes)
+		sess.User.NotificationIntervalMaxMinutes = int16(preset.MaxMinutes)
+	})
+	nextNotification := helpers.NextNotificationTime(*s.store.GetUser(userID), time.Now().UTC())
+	s.store.Update(userID, func(sess *session.Session) {
 		sess.User.NextNotification = nextNotification
 	})
-	return s.userRepo.Upsert(&models.User{TelegramID: userID, NextNotification: nextNotification})
+	return s.userRepo.Upsert(&models.User{
+		TelegramID:                     userID,
+		NotificationPreset:             preset.Key,
+		NotificationIntervalMinMinutes: int16(preset.MinMinutes),
+		NotificationIntervalMaxMinutes: int16(preset.MaxMinutes),
+		NextNotification:               nextNotification,
+	})
 }
 
 func (s *Service) UpdateMode(userID int64, mode models.UserMode) error {
@@ -72,6 +84,27 @@ func (s *Service) UpdateNextNotification(userID int64, t time.Time) error {
 		sess.User.NextNotification = t
 	})
 	return s.userRepo.UpdateNextNotification(userID, t)
+}
+
+func (s *Service) UpdateNotificationPreset(userID int64, preset constants.NotificationPreset) error {
+	s.ensureUserSessionLoaded(userID)
+	sanitized := s.normalizePreset(preset)
+	var nextNotification time.Time
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.User.NotificationPreset = sanitized.Key
+		sess.User.NotificationIntervalMinMinutes = int16(sanitized.MinMinutes)
+		sess.User.NotificationIntervalMaxMinutes = int16(sanitized.MaxMinutes)
+		nextNotification = helpers.NextNotificationTime(*sess.User, time.Now().UTC())
+		sess.User.NextNotification = nextNotification
+	})
+
+	return s.userRepo.UpdateNotificationInterval(
+		userID,
+		sanitized.Key,
+		int16(sanitized.MinMinutes),
+		int16(sanitized.MaxMinutes),
+		nextNotification,
+	)
 }
 
 func (s *Service) UpdateItemBoxClosedMsgID(userID int64, msgID int) error {
@@ -131,9 +164,24 @@ func (s *Service) ensureUserSessionLoaded(userID int64) {
 	s.logger.Debug(fmt.Sprintf("User not found in DB for userID=%d", userID))
 }
 
-func (s *Service) getNextRandNotification() time.Time {
-	return time.Now().UTC().Add(utils.RandomDurationMinutes(
-		constants.NotificationIntervalMinMinutes,
-		constants.NotificationIntervalMaxMinutes,
-	))
+func (s *Service) defaultPreset() constants.NotificationPreset {
+	if preset, ok := constants.NotificationPresets[constants.DefaultNotificationPreset]; ok {
+		return preset
+	}
+	return constants.NotificationPreset{
+		Key:        constants.DefaultNotificationPreset,
+		Name:       "Иногда",
+		MinMinutes: constants.DefaultNotificationIntervalMinMinutes,
+		MaxMinutes: constants.DefaultNotificationIntervalMaxMinutes,
+	}
+}
+
+func (s *Service) normalizePreset(preset constants.NotificationPreset) constants.NotificationPreset {
+	if preset.MinMinutes <= 0 || preset.MaxMinutes <= 0 || preset.MaxMinutes < preset.MinMinutes {
+		return s.defaultPreset()
+	}
+	if preset.Key == "" {
+		preset.Key = constants.DefaultNotificationPreset
+	}
+	return preset
 }

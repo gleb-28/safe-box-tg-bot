@@ -231,42 +231,21 @@ func (w *Worker) retryAt(nowUTC time.Time) time.Time {
 
 func (w *Worker) nextNotificationTime(user models.User, nowUTC time.Time) time.Time {
 	loc := w.userLocation(user)
-	localNow := nowUTC.In(loc)
-	nextLocal := localNow.Add(utils.RandomDurationMinutes(
-		constants.NotificationIntervalMinMinutes,
-		constants.NotificationIntervalMaxMinutes,
-	))
-	if isWithinActiveWindow(user, nextLocal) {
-		return nextLocal.UTC()
-	}
-	return w.nextStartTimeFromLocal(user, nextLocal, loc)
+	return helpers.NextNotificationTimeWithLoc(user, nowUTC, loc)
 }
 
 func (w *Worker) nextStartTime(user models.User, nowUTC time.Time) time.Time {
 	loc := w.userLocation(user)
-	return w.nextStartTimeFromLocal(user, nowUTC.In(loc), loc)
+	return helpers.NextStartTimeFromLocal(user, nowUTC.In(loc), loc)
 }
 
 func (w *Worker) nextStartTimeFromLocal(user models.User, fromLocal time.Time, loc *time.Location) time.Time {
-	startHour, startMinute := utils.MinutesToTime(int(user.DayStart))
-	start := time.Date(fromLocal.Year(), fromLocal.Month(), fromLocal.Day(), startHour, startMinute, 0, 0, loc)
-	if !fromLocal.Before(start) {
-		start = start.AddDate(0, 0, 1)
-	}
-
-	jitterMax := activeWindowMinutes(user)
-	if jitterMax > 60 {
-		jitterMax = 60
-	}
-	if jitterMax > 0 {
-		start = start.Add(time.Duration(utils.RandomIntRange(0, jitterMax)) * time.Minute)
-	}
-	return start.UTC()
+	return helpers.NextStartTimeFromLocal(user, fromLocal, loc)
 }
 
 func (w *Worker) isInActiveHours(user models.User, nowUTC time.Time) bool {
 	loc := w.userLocation(user)
-	return isWithinActiveWindow(user, nowUTC.In(loc))
+	return helpers.IsWithinActiveWindow(user, nowUTC.In(loc))
 }
 
 func (w *Worker) isOverdue(user models.User, nowUTC time.Time) bool {
@@ -277,41 +256,26 @@ func (w *Worker) isOverdue(user models.User, nowUTC time.Time) bool {
 	if overdueBy <= 0 {
 		return false
 	}
-	maxOverdue := time.Duration(constants.NotificationIntervalMaxMinutes+constants.NotificationCheckIntervalMinutes) * time.Minute
+	_, maxMinutes := w.notificationRange(user)
+	maxOverdue := time.Duration(maxMinutes+constants.NotificationCheckIntervalMinutes) * time.Minute
 	isOverdue := overdueBy > maxOverdue
 	w.logger.Debug(fmt.Sprintf("UserID=%d overdueBy=%s maxOverdue=%s isOverdue=%t", user.TelegramID, overdueBy, maxOverdue, isOverdue))
 	return isOverdue
 }
 
-func isWithinActiveWindow(user models.User, local time.Time) bool {
-	minutes := local.Hour()*60 + local.Minute()
-	start := int(user.DayStart)
-	end := int(user.DayEnd)
-
-	// DayStart/DayEnd are minutes in 24h format; equal values should be prevented by validation.
-	if start <= end {
-		return minutes >= start && minutes <= end
-	}
-	return minutes >= start || minutes <= end
-}
-
-func activeWindowMinutes(user models.User) int {
-	start := int(user.DayStart)
-	end := int(user.DayEnd)
-	if start <= end {
-		return end - start
-	}
-	return 24*60 - start + end
-}
-
 func (w *Worker) userLocation(user models.User) *time.Location {
-	if user.Timezone == "" {
-		return time.UTC
-	}
-	loc, err := time.LoadLocation(user.Timezone)
+	loc, err := helpers.UserLocation(user)
 	if err != nil {
 		w.logger.Error(fmt.Sprintf("Invalid timezone %q for userID=%d: %v", user.Timezone, user.TelegramID, err))
 		return time.UTC
 	}
 	return loc
+}
+
+func (w *Worker) notificationRange(user models.User) (int, int) {
+	minMinutes, maxMinutes := helpers.UserNotificationRange(user)
+	if minMinutes <= 0 || maxMinutes <= 0 || maxMinutes < minMinutes {
+		return constants.DefaultNotificationIntervalMinMinutes, constants.DefaultNotificationIntervalMaxMinutes
+	}
+	return minMinutes, maxMinutes
 }

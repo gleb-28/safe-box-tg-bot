@@ -59,3 +59,15 @@ func (r *UserRepo) UpdateMode(telegramID int64, mode models.UserMode) error {
 		Update("mode", mode).
 		Error
 }
+
+func (r *UserRepo) UpdateNotificationInterval(telegramID int64, preset string, min, max int16, next time.Time) error {
+	return r.db.Model(&models.User{}).
+		Where("telegram_id = ?", telegramID).
+		Updates(map[string]interface{}{
+			"notification_preset":               preset,
+			"notification_interval_min_minutes": min,
+			"notification_interval_max_minutes": max,
+			"next_notification":                 next,
+		}).
+		Error
+}
