@@ -65,7 +65,7 @@ Set `IS_DEBUG=true` in `.env` to enable debug logs.
 - DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
 - Notifications use LLM generation (prompt from PROMPT_PATH, default `data/prompt`) via a message generator (prompt builder + LLM client); if it fails, the item name plus an emoji is sent as a fallback.
 - If `NextNotification` is overdue beyond the max interval (or zero), recalculate it from now without sending.
-- Randomized interval is 60–180 minutes (1–3 hours), stored/treated in minutes across the system.
+- Randomized interval is 40–150 minutes (40min–2.5 hours), stored/treated in minutes across the system.
 
 ## Item box UI
 - On close, the bot sends "Шкатулка закрыта" with the main menu keyboard.

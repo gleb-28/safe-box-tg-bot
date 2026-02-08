@@ -15,8 +15,8 @@ const (
 
 const (
 	NotificationCheckIntervalMinutes = 5
-	NotificationIntervalMinMinutes   = 60
-	NotificationIntervalMaxMinutes   = 180
+	NotificationIntervalMinMinutes   = 40
+	NotificationIntervalMaxMinutes   = 150
 	NotificationRetryMinutes         = 10
 	NotificationItemCooldownMinutes  = 360
 )

@@ -22,7 +22,7 @@ Time logic
 - Send only within DayStart → DayEnd.
 - Send nothing at night.
 - DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
-- Interval is 60–180 minutes (1–3 hours) with randomness; after send, compute a new NextNotification.
+- Interval is 40–150 minutes (40min–2.5 hours) with randomness; after send, compute a new NextNotification.
 
 Notifications
 - Background worker runs once on startup, then checks users with NextNotification <= now (UTC).
