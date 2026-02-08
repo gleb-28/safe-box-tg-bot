@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+func HumanNotificationStatus(muted bool) string {
+	if muted {
+		return "выключены"
+	}
+	return "включены"
+}
+
 func ParseNotificationPreset(raw string) (constants.NotificationPreset, bool) {
 	preset, ok := constants.NotificationPresets[raw]
 	return preset, ok

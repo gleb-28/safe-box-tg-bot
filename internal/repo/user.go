@@ -33,7 +33,9 @@ func (r *UserRepo) Upsert(user *models.User) error {
 
 func (r *UserRepo) GetUsersForNotification(now time.Time) ([]models.User, error) {
 	var users []models.User
-	if err := r.db.Where("next_notification <= ?", now).Find(&users).Error; err != nil {
+	if err := r.db.Where("notifications_muted = ?", false).
+		Where("next_notification <= ?", now).
+		Find(&users).Error; err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -68,6 +70,16 @@ func (r *UserRepo) UpdateNotificationInterval(telegramID int64, preset string, m
 			"notification_interval_min_minutes": min,
 			"notification_interval_max_minutes": max,
 			"next_notification":                 next,
+		}).
+		Error
+}
+
+func (r *UserRepo) UpdateNotificationsMuted(telegramID int64, muted bool, next time.Time) error {
+	return r.db.Model(&models.User{}).
+		Where("telegram_id = ?", telegramID).
+		Updates(map[string]interface{}{
+			"notifications_muted": muted,
+			"next_notification":   next,
 		}).
 		Error
 }

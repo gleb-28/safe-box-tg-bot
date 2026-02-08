@@ -13,6 +13,7 @@ var commands = []telebot.Command{
 	{Text: "key", Description: "Ввести секретный ключ"},
 	{Text: "change_mode", Description: "Сменить стиль сообщений"},
 	{Text: "change_interval", Description: "Сменить частоту напоминаний"},
+	{Text: "toggle_notifications", Description: "Включить/выключить уведомления"},
 }
 
 func MustInitCommandsHandler(bot *bot.Bot) {
@@ -25,4 +26,5 @@ func MustInitCommandsHandler(bot *bot.Bot) {
 	bot.Handle("/key", createKeyHandler(bot))
 	initChangeModeHandler(bot)
 	initChangeIntervalHandler(bot)
+	initToggleNotificationsHandler(bot)
 }

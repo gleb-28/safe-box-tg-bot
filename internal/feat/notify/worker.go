@@ -94,6 +94,10 @@ func (w *Worker) processUser(nowUTC time.Time, user models.User) {
 		return
 	}
 
+	if user.NotificationsMuted {
+		return
+	}
+
 	if w.isOverdue(user, nowUTC) {
 		next := w.nextNotificationTime(user, nowUTC)
 		w.logger.Debug(fmt.Sprintf("UserID=%d overdue; reschedule to %s", user.TelegramID, next.Format(time.RFC3339)))

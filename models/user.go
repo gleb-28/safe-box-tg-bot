@@ -18,6 +18,7 @@ type User struct {
 	NotificationPreset             string    `gorm:"not null;default:'normal'"`
 	NotificationIntervalMinMinutes int16     `gorm:"not null;default:60;check:notification_interval_min_minutes >= 1 AND notification_interval_min_minutes <= 1440"`
 	NotificationIntervalMaxMinutes int16     `gorm:"not null;default:120;check:notification_interval_max_minutes >= notification_interval_min_minutes AND notification_interval_max_minutes <= 1440"`
+	NotificationsMuted             bool      `gorm:"not null;default:false"`
 	NextNotification               time.Time `gorm:"index"`
 	ItemBoxClosedMsgID             int       `gorm:"not null;default:0"`
 	Items                          []Item

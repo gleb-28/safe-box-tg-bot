@@ -86,6 +86,23 @@ func (s *Service) UpdateNextNotification(userID int64, t time.Time) error {
 	return s.userRepo.UpdateNextNotification(userID, t)
 }
 
+func (s *Service) SetNotificationsMuted(userID int64, muted bool) error {
+	s.ensureUserSessionLoaded(userID)
+	var next time.Time
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.User.NotificationsMuted = muted
+		if muted {
+			next = time.Time{}
+			sess.User.NextNotification = time.Time{}
+			return
+		}
+		next = helpers.NextNotificationTime(*sess.User, time.Now().UTC())
+		sess.User.NextNotification = next
+	})
+
+	return s.userRepo.UpdateNotificationsMuted(userID, muted, next)
+}
+
 func (s *Service) UpdateNotificationPreset(userID int64, preset constants.NotificationPreset) error {
 	s.ensureUserSessionLoaded(userID)
 	sanitized := s.normalizePreset(preset)
