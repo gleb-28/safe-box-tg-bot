@@ -9,7 +9,7 @@
 *.gem
 *.bin
 *.db
-data/
+data/*.db
 .ai
 
 # Test binary, built with `go test -c`
