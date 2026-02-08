@@ -6,6 +6,7 @@ import (
 	"fmt"
 	stdlog "log"
 	"os"
+	"safeboxtgbot/internal/helpers"
 	"strings"
 
 	"safeboxtgbot/internal/core/logger"
@@ -99,7 +100,7 @@ func (g *MessageOrchestrator) Generate(ctx context.Context, input LLMInput) (str
 		return "", err
 	}
 
-	text := cleanLLMText(raw)
+	text := helpers.CleanLLMText(raw)
 	if text == "" {
 		return "", errors.New("llm response is empty")
 	}
@@ -118,21 +119,4 @@ func buildUserPrompt(input LLMInput) string {
 		input.StyleMode,
 		input.RandomSeed,
 	)
-}
-
-func cleanLLMText(raw string) string {
-	trimmed := strings.TrimSpace(raw)
-	if strings.HasPrefix(trimmed, "```") {
-		trimmed = strings.TrimSpace(strings.TrimPrefix(trimmed, "```"))
-		if idx := strings.LastIndex(trimmed, "```"); idx >= 0 {
-			trimmed = strings.TrimSpace(trimmed[:idx])
-		}
-		if idx := strings.Index(trimmed, "\n"); idx >= 0 {
-			first := strings.TrimSpace(trimmed[:idx])
-			if strings.EqualFold(first, "json") || strings.EqualFold(first, "text") {
-				trimmed = strings.TrimSpace(trimmed[idx+1:])
-			}
-		}
-	}
-	return strings.TrimSpace(trimmed)
 }

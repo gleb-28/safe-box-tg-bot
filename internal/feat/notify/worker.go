@@ -3,6 +3,7 @@ package notify
 import (
 	"context"
 	"fmt"
+	"safeboxtgbot/internal/helpers"
 	"strings"
 	"time"
 
@@ -128,7 +129,7 @@ func (w *Worker) processUser(nowUTC time.Time, user models.User) {
 		return
 	}
 
-	text := fallbackText(item.Name)
+	text := helpers.FallbackText(item.Name, constants.FallbackEmojis)
 	if w.messageGenerator != nil {
 		generated, err := w.generateText(nowUTC, user, *item)
 		if err != nil {
@@ -215,8 +216,8 @@ func (w *Worker) generateText(nowUTC time.Time, user models.User, item models.It
 	localNow := nowUTC.In(loc)
 	input := prompt.LLMInput{
 		CurrentEntity: item.Name,
-		TimeOfDay:     timeOfDay(localNow),
-		StyleMode:     modeToStyle(user.Mode),
+		TimeOfDay:     helpers.TimeOfDay(localNow),
+		StyleMode:     helpers.ModeToStyle(user.Mode),
 		RandomSeed:    utils.RandomIntRange(1, 1_000_000),
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -313,48 +314,4 @@ func (w *Worker) userLocation(user models.User) *time.Location {
 		return time.UTC
 	}
 	return loc
-}
-
-func fallbackText(name string) string {
-	trimmed := strings.TrimSpace(name)
-	emoji := ""
-	if len(fallbackEmojis) > 0 {
-		emoji = fallbackEmojis[utils.RandomIndex(len(fallbackEmojis))]
-	}
-	if trimmed == "" {
-		return strings.TrimSpace(emoji)
-	}
-	if emoji == "" {
-		return trimmed
-	}
-	return trimmed + " " + emoji
-}
-
-var fallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
-
-func modeToStyle(mode models.UserMode) string {
-	switch mode {
-	case constants.RoflMode:
-		return "rofl"
-	case constants.CareMode:
-		return "care"
-	case constants.CozyMode:
-		return "cozy"
-	default:
-		return "cozy"
-	}
-}
-
-func timeOfDay(local time.Time) string {
-	hour := local.Hour()
-	switch {
-	case hour >= 5 && hour < 12:
-		return "morning"
-	case hour >= 12 && hour < 18:
-		return "day"
-	case hour >= 18 && hour < 23:
-		return "evening"
-	default:
-		return ""
-	}
 }

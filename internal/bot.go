@@ -55,6 +55,10 @@ func (bot *Bot) MustReact(msg *telebot.Message, reaction telebot.Reaction) {
 	}
 }
 
+func (bot *Bot) RespondSilently(ctx telebot.Context) {
+	_ = ctx.Respond()
+}
+
 // TODO
 func MustEdit() {}
 

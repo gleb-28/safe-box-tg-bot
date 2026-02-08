@@ -4,7 +4,7 @@ import (
 	"context"
 	b "safeboxtgbot/internal"
 	fsmManager "safeboxtgbot/internal/fsm"
-	"safeboxtgbot/internal/handlers/keyboard"
+	"safeboxtgbot/internal/handler/keyboard"
 
 	"gopkg.in/telebot.v4"
 )

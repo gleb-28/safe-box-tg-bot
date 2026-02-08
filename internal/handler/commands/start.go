@@ -2,7 +2,7 @@ package commands
 
 import (
 	b "safeboxtgbot/internal"
-	"safeboxtgbot/internal/handlers/keyboard"
+	"safeboxtgbot/internal/handler/keyboard"
 
 	"gopkg.in/telebot.v4"
 )

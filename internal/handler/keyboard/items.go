@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"safeboxtgbot/internal/helpers"
+	"safeboxtgbot/internal/middleware/auth"
 	"strings"
 
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/feat/items"
 	fsmManager "safeboxtgbot/internal/fsm"
-	"safeboxtgbot/internal/handlers/auth"
 	"safeboxtgbot/models"
 
 	"gopkg.in/telebot.v4"
@@ -45,7 +46,7 @@ func OpenItemBox(bot *b.Bot, userID int64, sourceMsg *telebot.Message) error {
 func createAddItemHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
+		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.AwaitingItemAddEvent)
 		bot.ItemsService.ClearEditingItemName(userID)
 		return renderAddItemPrompt(bot, userID, ctx.Message(), "")
@@ -70,7 +71,7 @@ func CreateValidateAddItemHandler(bot *b.Bot) telebot.HandlerFunc {
 func createEditItemHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
+		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemEditSelectOpenedEvent)
 		bot.ItemsService.ClearEditingItemName(userID)
 		return renderEditItemSelectPrompt(bot, userID, ctx.Message())
@@ -101,7 +102,7 @@ func CreateValidateEditItemHandler(bot *b.Bot) telebot.HandlerFunc {
 func createDeleteItemHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
+		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemDeleteSelectOpenedEvent)
 		bot.ItemsService.ClearEditingItemName(userID)
 		return renderDeleteSelect(bot, userID, ctx.Message())
@@ -111,7 +112,7 @@ func createDeleteItemHandler(bot *b.Bot) telebot.HandlerFunc {
 func createCloseItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
+		bot.RespondSilently(ctx)
 		bot.ItemsService.ClearEditingItemName(userID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.InitialEvent)
 		bot.ItemsService.SetBotLastMsg(userID, nil)
@@ -127,7 +128,7 @@ func createCloseItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 func createBackToItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
+		bot.RespondSilently(ctx)
 		bot.ItemsService.ClearEditingItemName(userID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
 		return renderItemBox(bot, userID, ctx.Message())
@@ -137,8 +138,8 @@ func createBackToItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 func createEditItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
-		itemName, err := parseItemName(ctx)
+		bot.RespondSilently(ctx)
+		itemName, err := helpers.ParseItemName(ctx)
 		if err != nil {
 			return renderItemBox(bot, userID, ctx.Message())
 		}
@@ -152,8 +153,8 @@ func createEditItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 func createDeleteItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		respondSilently(ctx)
-		itemName, err := parseItemName(ctx)
+		bot.RespondSilently(ctx)
+		itemName, err := helpers.ParseItemName(ctx)
 		if err != nil {
 			return renderItemBox(bot, userID, ctx.Message())
 		}
@@ -337,22 +338,6 @@ func renderInputPrompt(bot *b.Bot, userID int64, isAdd bool, note string) error 
 
 	itemID := bot.ItemsService.GetEditingItemName(userID)
 	return renderEditItemPrompt(bot, userID, nil, itemID, note)
-}
-
-func parseItemName(ctx telebot.Context) (string, error) {
-	raw := ctx.Data()
-	if raw == "" && ctx.Callback() != nil {
-		raw = ctx.Callback().Data
-	}
-	raw = strings.TrimSpace(raw)
-	if raw == "" {
-		return "", fmt.Errorf("empty item name")
-	}
-	return raw, nil
-}
-
-func respondSilently(ctx telebot.Context) {
-	_ = ctx.Respond()
 }
 
 func clearClosedItemBoxMessage(bot *b.Bot, userID int64) {

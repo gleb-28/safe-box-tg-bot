@@ -20,3 +20,5 @@ const (
 	NotificationRetryMinutes         = 10
 	NotificationItemCooldownMinutes  = 360
 )
+
+var FallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}

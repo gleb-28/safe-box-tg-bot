@@ -4,7 +4,8 @@ import (
 	"fmt"
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/core/constants"
-	"safeboxtgbot/internal/handlers/auth"
+	"safeboxtgbot/internal/helpers"
+	"safeboxtgbot/internal/middleware/auth"
 	"safeboxtgbot/models"
 	"time"
 
@@ -34,7 +35,7 @@ func createChangeModeHandler(bot *b.Bot) telebot.HandlerFunc {
 			return nil
 		}
 
-		msg := bot.MustSend(userID, fmt.Sprintf(bot.Replies.ChangeModePrompt, humanModeName(user.Mode)), changeModeMarkup(user.Mode))
+		msg := bot.MustSend(userID, fmt.Sprintf(bot.Replies.ChangeModePrompt, helpers.HumanModeName(user.Mode)), changeModeMarkup(user.Mode))
 		if msg == nil {
 			return ctx.Send(bot.Replies.Error)
 		}
@@ -54,7 +55,7 @@ func createModeSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 		if raw == "" && ctx.Callback() != nil {
 			raw = ctx.Callback().Data
 		}
-		mode, ok := parseMode(raw)
+		mode, ok := helpers.ParseMode(raw)
 		if !ok {
 			return ctx.Respond(&telebot.CallbackResponse{Text: bot.Replies.Error, ShowAlert: true})
 		}
@@ -68,7 +69,7 @@ func createModeSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 			bot.MustDelete(ctx.Message())
 		}
 
-		msg := bot.MustSend(userID, fmt.Sprintf(bot.Replies.ChangeModeUpdated, humanModeName(mode)))
+		msg := bot.MustSend(userID, fmt.Sprintf(bot.Replies.ChangeModeUpdated, helpers.HumanModeName(mode)))
 		if msg != nil {
 			go func(m *telebot.Message) {
 				time.Sleep(5 * time.Second)
@@ -121,30 +122,4 @@ func changeModeMarkup(current models.UserMode) *telebot.ReplyMarkup {
 
 	markup.Inline(rows...)
 	return markup
-}
-
-func parseMode(raw string) (models.UserMode, bool) {
-	switch models.UserMode(raw) {
-	case constants.RoflMode:
-		return constants.RoflMode, true
-	case constants.CozyMode:
-		return constants.CozyMode, true
-	case constants.CareMode:
-		return constants.CareMode, true
-	default:
-		return "", false
-	}
-}
-
-func humanModeName(mode models.UserMode) string {
-	switch mode {
-	case constants.RoflMode:
-		return "Рофл"
-	case constants.CareMode:
-		return "Забота"
-	case constants.CozyMode:
-		return "Уют"
-	default:
-		return "Уют"
-	}
 }

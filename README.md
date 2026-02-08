@@ -9,9 +9,12 @@ Access is gated by an activation key.
 Users can switch the message style at any time with `/change_mode` (buttons: rofl/cozy/care + close).
 
 Active hours are stored as DayStart/DayEnd minutes in 24-hour format; the notification worker runs once on startup
-and then periodically to process due users.
+and then periodically to process due users. If `NextNotification` is overdue beyond the max interval, it is recalculated
+from "now" without sending.
 
-LLM requests go through OpenRouter using the prompt in `data/prompt`; if generation fails, the item name plus an emoji is sent as a fallback.
+LLM requests go through OpenRouter using the prompt in `data/prompt`; replies are trimmed and unwrapped from
+`json`/`text` code fences before sending. If generation fails, the item name plus an emoji (palette in
+`internal/core/constants`) is sent as a fallback.
 
 ## 🔒 Limits
 

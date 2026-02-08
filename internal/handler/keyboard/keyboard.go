@@ -3,7 +3,7 @@ package keyboard
 import (
 	b "safeboxtgbot/internal"
 	fsmManager "safeboxtgbot/internal/fsm"
-	"safeboxtgbot/internal/handlers/auth"
+	"safeboxtgbot/internal/middleware/auth"
 
 	"gopkg.in/telebot.v4"
 )

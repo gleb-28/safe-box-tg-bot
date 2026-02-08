@@ -54,6 +54,11 @@ gofmt -w <file.go>
 ## Debugging
 Set `IS_DEBUG=true` in `.env` to enable debug logs.
 
+## LLM testing
+- Use `notify.NewTestLLMWorker(userService, itemsService, messageGenerator, logger)` to sample texts for a specific user.
+- `GenerateForUser(ctx, userID)` returns `[]LLMTestResult` with `ItemName`, trimmed `Text`, and `Err` (if generation failed).
+- Handy for iterating on the prompt without pushing real Telegram messages.
+
 ## Notifications
 - The notification worker starts automatically with the bot, runs once immediately, and uses `NextNotification` in UTC.
 - Messages are sent only within DayStart/DayEnd in the user's timezone.
@@ -75,5 +80,6 @@ Set `IS_DEBUG=true` in `.env` to enable debug logs.
 - Repos (GORM only): `internal/repo/`
 - Services/logic: `internal/feat/`
 - Session cache: `internal/session/`
+- Telegram handlers: `internal/handler/{commands,keyboard,message}`, middleware in `internal/middleware/`
 
 See `PROMT_INSTRUCTIONS` for behavior rules and messaging constraints.

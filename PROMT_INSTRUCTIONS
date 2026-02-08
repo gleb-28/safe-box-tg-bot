@@ -60,6 +60,7 @@ FSM and access
 LLM generation
 - Input: current_entity, time_of_day (morning/day/evening or empty), style_mode, random_seed.
 - Output: free-form text in Russian, following style rules; prompt builder + LLM service are wired via a message generator.
+- Responses are trimmed and code fences (json/text) are stripped before delivery; avoid wrapping answers in fences.
 - Must mention the entity and respect the style.
 - Prompt template is loaded from PROMPT_PATH (default: data/prompt).
 - Users can change the style via `/change_mode`; the current mode is hidden in the inline list, and there is a close button.

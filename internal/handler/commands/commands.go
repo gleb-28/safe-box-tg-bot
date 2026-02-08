@@ -3,7 +3,7 @@ package commands
 import (
 	"log"
 	bot "safeboxtgbot/internal"
-	"safeboxtgbot/internal/handlers/auth"
+	"safeboxtgbot/internal/middleware/auth"
 
 	"gopkg.in/telebot.v4"
 )
