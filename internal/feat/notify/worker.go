@@ -143,7 +143,7 @@ func (w *Worker) processUser(nowUTC time.Time, user models.User) {
 		w.updateNextNotification(user, w.retryAt(nowUTC))
 		return
 	}
-	w.logger.Debug(fmt.Sprintf("UserID=%d notification sent", user.TelegramID))
+	w.logger.Info(fmt.Sprintf("Notification sent userID=%d itemID=%d name=%q text=%q", user.TelegramID, item.ID, item.Name, text))
 
 	if err := w.messageLogRepo.Create(&models.MessageLog{
 		UserID: user.TelegramID,

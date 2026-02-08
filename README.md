@@ -10,7 +10,8 @@ Users can switch the message style at any time with `/change_mode` (buttons: rof
 
 Active hours are stored as DayStart/DayEnd minutes in 24-hour format; the notification worker runs once on startup
 and then periodically to process due users. If `NextNotification` is overdue beyond the max interval, it is recalculated
-from "now" without sending.
+from "now" without sending. Each successful notification is logged at info level with user ID, item ID, name, and the
+sent text for easier ops tracing.
 
 LLM requests go through OpenRouter using the prompt in `data/prompt`; replies are trimmed and unwrapped from
 `json`/`text` code fences before sending. If generation fails, the item name plus an emoji (palette in

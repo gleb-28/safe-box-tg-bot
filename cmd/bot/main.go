@@ -47,6 +47,8 @@ func main() {
 	promptBuilder := prompt.MustNewPromptBuilder(cfg.PromptPath, logger)
 	messageGenerator := prompt.MustNewMessageGenerator(promptBuilder, llmService, logger)
 
+	commands.MustInitAdminCommandsHandler(bot, messageGenerator)
+
 	notifyWorker := notify.NewWorker(userService, itemsService, messageLogRepo, messageGenerator, bot, logger)
 	go notifyWorker.Start(context.Background())
 

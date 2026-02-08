@@ -55,15 +55,17 @@ gofmt -w <file.go>
 Set `IS_DEBUG=true` in `.env` to enable debug logs.
 
 ## LLM testing
-- Use `notify.NewTestLLMWorker(userService, itemsService, messageGenerator, logger)` to sample texts for a specific user.
-- `GenerateForUser(ctx, userID)` returns `[]LLMTestResult` with `ItemName`, trimmed `Text`, and `Err` (if generation failed).
-- Handy for iterating on the prompt without pushing real Telegram messages.
+- Use `notify.NewLLMPreviewService(userService, itemsService, messageGenerator, bot, logger)` to preview texts for a specific user.
+- `SendPreviews(ctx, userID)` generates messages for all user items in the current mode/time-of-day and sends them to the user as `<item>: <message>`.
+- Handy for iterating on the prompt without pushing real production notifications.
+- Admin-only command: `/preview_llm` triggers the preview service for the admin chat.
 
 ## Notifications
 - The notification worker starts automatically with the bot, runs once immediately, and uses `NextNotification` in UTC.
 - Messages are sent only within DayStart/DayEnd in the user's timezone.
 - DayStart/DayEnd are minutes in 24-hour format; DayStart != DayEnd is enforced by validation.
 - Notifications use LLM generation (prompt from PROMPT_PATH, default `data/prompt`) via a message generator (prompt builder + LLM client); if it fails, the item name plus an emoji is sent as a fallback.
+- On success the worker logs info with userID, itemID, item name, and the sent text to aid ops investigations.
 - If `NextNotification` is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Randomized interval is 40–150 minutes (40min–2.5 hours), stored/treated in minutes across the system.
 

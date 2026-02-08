@@ -82,12 +82,12 @@ func MustBot(
 	}
 
 	return &Bot{
-		bot,
-		fsm,
-		userService,
-		itemsService,
-		config,
-		replies,
-		logger,
+		Bot:          bot,
+		Fsm:          fsm,
+		UserService:  userService,
+		ItemsService: itemsService,
+		Config:       config,
+		Replies:      replies,
+		Logger:       logger,
 	}
 }
