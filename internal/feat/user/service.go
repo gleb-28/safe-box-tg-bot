@@ -56,10 +56,14 @@ func (s *Service) AddUser(userID int64) error {
 
 func (s *Service) UpdateMode(userID int64, mode models.UserMode) error {
 	s.ensureUserSessionLoaded(userID)
+	current := s.store.GetUser(userID).Mode
+	if current == mode {
+		return nil
+	}
 	s.store.Update(userID, func(sess *session.Session) {
 		sess.User.Mode = mode
 	})
-	return s.userRepo.Upsert(&models.User{TelegramID: userID, Mode: mode})
+	return s.userRepo.UpdateMode(userID, mode)
 }
 
 func (s *Service) UpdateNextNotification(userID int64, t time.Time) error {

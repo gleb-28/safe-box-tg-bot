@@ -11,6 +11,7 @@ import (
 var commands = []telebot.Command{
 	{Text: "start", Description: "Старт"},
 	{Text: "key", Description: "Ввести секретный ключ"},
+	{Text: "change_mode", Description: "Сменить стиль сообщений"},
 }
 
 func MustInitCommandsHandler(bot *bot.Bot) {
@@ -21,4 +22,5 @@ func MustInitCommandsHandler(bot *bot.Bot) {
 
 	bot.Handle("/start", createStartHandler(bot), auth.CreateAuthMiddleware(bot))
 	bot.Handle("/key", createKeyHandler(bot))
+	initChangeModeHandler(bot)
 }
