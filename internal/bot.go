@@ -55,12 +55,17 @@ func (bot *Bot) MustReact(msg *telebot.Message, reaction telebot.Reaction) {
 	}
 }
 
+func (bot *Bot) MustEdit(msg telebot.Editable, what interface{}, opts ...interface{}) *telebot.Message {
+	m, err := bot.Edit(msg, what, opts...)
+	if err != nil {
+		bot.Logger.Error(fmt.Sprintf("Error editing message: %v", err.Error()))
+	}
+	return m
+}
+
 func (bot *Bot) RespondSilently(ctx telebot.Context) {
 	_ = ctx.Respond()
 }
-
-// TODO
-func MustEdit() {}
 
 func MustBot(
 	config *config.AppConfig,

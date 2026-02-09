@@ -293,15 +293,13 @@ func upsertBotLastMessage(bot *b.Bot, userID int64, sourceMsg *telebot.Message, 
 	}
 
 	if msg != nil {
-		edited, err := bot.Edit(msg, text, markup)
-		if err == nil {
-			if edited != nil {
-				bot.ItemsService.SetBotLastMsg(userID, edited)
-			} else {
-				bot.ItemsService.SetBotLastMsg(userID, msg)
-			}
+		edited := bot.MustEdit(msg, text, markup)
+		if edited != nil {
+			bot.ItemsService.SetBotLastMsg(userID, edited)
 			return nil
 		}
+
+		bot.ItemsService.SetBotLastMsg(userID, msg)
 	}
 
 	sent := bot.MustSend(userID, text, markup)
