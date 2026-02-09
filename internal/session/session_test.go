@@ -168,8 +168,8 @@ func TestStoreItems_DefaultState(t *testing.T) {
 	if len(sess.Items.ItemList) != 0 {
 		t.Fatalf("expected ItemList to be empty for new session")
 	}
-	if sess.Items.EditingItemName != "" {
-		t.Fatalf("expected EditingItemName to be empty for new session")
+	if sess.Items.EditingItemID != 0 {
+		t.Fatalf("expected EditingItemID to be zero for new session")
 	}
 }
 
@@ -196,18 +196,18 @@ func TestStoreSetItemList_MarksLoaded(t *testing.T) {
 	}
 }
 
-func TestStoreEditingItemName(t *testing.T) {
+func TestStoreEditingItemID(t *testing.T) {
 	logger := &testLogger{}
 	store := NewStore(logger)
 
 	_ = store.Get(3)
-	store.SetEditingItemName(3, "item-99")
-	if got := store.GetEditingItemName(3); got != "item-99" {
-		t.Fatalf("expected EditingItemName \"item-99\", got %q", got)
+	store.SetEditingItemID(3, 99)
+	if got := store.GetEditingItemID(3); got != 99 {
+		t.Fatalf("expected EditingItemID 99, got %d", got)
 	}
-	store.ClearEditingItemName(3)
-	if got := store.GetEditingItemName(3); got != "" {
-		t.Fatalf("expected EditingItemName empty after Clear, got %q", got)
+	store.ClearEditingItemID(3)
+	if got := store.GetEditingItemID(3); got != 0 {
+		t.Fatalf("expected EditingItemID zero after Clear, got %d", got)
 	}
 }
 
@@ -218,7 +218,7 @@ func TestStoreUpdateUser_DoesNotAlterItemsState(t *testing.T) {
 	_ = store.Get(4)
 	items := []models.Item{{Name: "item-a"}}
 	store.SetItemList(4, items)
-	store.SetEditingItemName(4, "item-7")
+	store.SetEditingItemID(4, 7)
 
 	store.UpdateUser(4, &models.User{TelegramID: 4})
 
@@ -229,8 +229,8 @@ func TestStoreUpdateUser_DoesNotAlterItemsState(t *testing.T) {
 	if len(got) != 1 || got[0].Name != "item-a" {
 		t.Fatalf("expected ItemList to remain unchanged after UpdateUser")
 	}
-	if gotName := store.GetEditingItemName(4); gotName != "item-7" {
-		t.Fatalf("expected EditingItemName to remain \"item-7\" after UpdateUser, got %q", gotName)
+	if gotID := store.GetEditingItemID(4); gotID != 7 {
+		t.Fatalf("expected EditingItemID to remain 7 after UpdateUser, got %d", gotID)
 	}
 }
 

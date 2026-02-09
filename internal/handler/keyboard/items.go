@@ -39,7 +39,7 @@ func MustInitItemBoxButtons(bot *b.Bot) {
 func OpenItemBox(bot *b.Bot, userID int64, sourceMsg *telebot.Message) error {
 	clearClosedItemBoxMessage(bot, userID)
 	bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
-	bot.ItemsService.ClearEditingItemName(userID)
+	bot.ItemsService.ClearEditingItemID(userID)
 	return renderItemBox(bot, userID, sourceMsg)
 }
 
@@ -48,7 +48,7 @@ func createAddItemHandler(bot *b.Bot) telebot.HandlerFunc {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.AwaitingItemAddEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderAddItemPrompt(bot, userID, ctx.Message(), "")
 	}
 }
@@ -63,7 +63,7 @@ func CreateValidateAddItemHandler(bot *b.Bot) telebot.HandlerFunc {
 		}
 
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderItemBox(bot, userID, nil)
 	}
 }
@@ -73,7 +73,7 @@ func createEditItemHandler(bot *b.Bot) telebot.HandlerFunc {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemEditSelectOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderEditItemSelectPrompt(bot, userID, ctx.Message())
 	}
 }
@@ -81,20 +81,20 @@ func createEditItemHandler(bot *b.Bot) telebot.HandlerFunc {
 func CreateValidateEditItemHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
-		itemName := bot.ItemsService.GetEditingItemName(userID)
-		if itemName == "" {
+		itemID := bot.ItemsService.GetEditingItemID(userID)
+		if itemID == 0 {
 			bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
 			return renderItemBox(bot, userID, nil)
 		}
 
-		err := bot.ItemsService.UpdateItemName(userID, itemName, ctx.Message().Text)
+		err := bot.ItemsService.UpdateItemName(userID, itemID, ctx.Message().Text)
 		bot.MustDelete(ctx.Message())
 		if err != nil {
 			return handleItemInputError(bot, userID, err, false)
 		}
 
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderItemBox(bot, userID, nil)
 	}
 }
@@ -104,7 +104,7 @@ func createDeleteItemHandler(bot *b.Bot) telebot.HandlerFunc {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemDeleteSelectOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderDeleteSelect(bot, userID, ctx.Message())
 	}
 }
@@ -113,7 +113,7 @@ func createCloseItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.InitialEvent)
 		bot.ItemsService.SetBotLastMsg(userID, nil)
 		clearClosedItemBoxMessage(bot, userID)
@@ -129,7 +129,7 @@ func createBackToItemBoxHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
 		return renderItemBox(bot, userID, ctx.Message())
 	}
@@ -139,12 +139,17 @@ func createEditItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
-		itemName, err := helpers.ParseItemName(ctx)
+		itemID, err := helpers.ParseItemID(ctx)
 		if err != nil {
 			return renderItemBox(bot, userID, ctx.Message())
 		}
 
-		bot.ItemsService.SetEditingItemName(userID, itemName)
+		itemName, err := bot.ItemsService.GetItemNameByID(userID, itemID)
+		if err != nil {
+			return renderItemBox(bot, userID, ctx.Message())
+		}
+
+		bot.ItemsService.SetEditingItemID(userID, itemID)
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.AwaitingItemEditEvent)
 		return renderEditItemPrompt(bot, userID, ctx.Message(), itemName, "")
 	}
@@ -154,12 +159,12 @@ func createDeleteItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		userID := ctx.Chat().ID
 		bot.RespondSilently(ctx)
-		itemName, err := helpers.ParseItemName(ctx)
+		itemID, err := helpers.ParseItemID(ctx)
 		if err != nil {
 			return renderItemBox(bot, userID, ctx.Message())
 		}
 
-		if err := bot.ItemsService.DeleteItem(userID, itemName); err != nil {
+		if err := bot.ItemsService.DeleteItem(userID, itemID); err != nil {
 			if errors.Is(err, items.ErrItemNotFound) {
 				bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
 				return renderItemBox(bot, userID, ctx.Message())
@@ -215,7 +220,7 @@ func renderEditItemSelectPrompt(bot *b.Bot, userID int64, sourceMsg *telebot.Mes
 		text = bot.Replies.ListIsEmpty
 	}
 	return upsertBotLastMessage(bot, userID, sourceMsg, text, selectItemMarkup(itemList, btnSelectItemToEdit, func(item models.Item) string {
-		return item.Name
+		return fmt.Sprintf("%d", item.ID)
 	}))
 }
 
@@ -250,7 +255,7 @@ func renderDeleteSelect(bot *b.Bot, userID int64, sourceMsg *telebot.Message) er
 		text = bot.Replies.ListIsEmpty
 	}
 	return upsertBotLastMessage(bot, userID, sourceMsg, text, selectItemMarkup(itemList, btnSelectItemToDelete, func(item models.Item) string {
-		return item.Name
+		return fmt.Sprintf("%d", item.ID)
 	}))
 }
 
@@ -311,7 +316,7 @@ func handleItemInputError(bot *b.Bot, userID int64, err error, isAdd bool) error
 	switch {
 	case errors.Is(err, items.ErrItemLimitReached):
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return upsertBotLastMessage(bot, userID, nil, bot.Replies.ItemsLimitReached, itemBoxMarkup())
 	case errors.Is(err, items.ErrItemDuplicate):
 		return renderInputPrompt(bot, userID, isAdd, bot.Replies.ItemDuplicate)
@@ -321,10 +326,10 @@ func handleItemInputError(bot *b.Bot, userID int64, err error, isAdd bool) error
 		return renderInputPrompt(bot, userID, isAdd, bot.Replies.ItemNameTooLong)
 	case errors.Is(err, items.ErrItemNotFound):
 		bot.Fsm.UserEvent(context.Background(), userID, fsmManager.ItemsMenuOpenedEvent)
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return renderItemBox(bot, userID, nil)
 	default:
-		bot.ItemsService.ClearEditingItemName(userID)
+		bot.ItemsService.ClearEditingItemID(userID)
 		return upsertBotLastMessage(bot, userID, nil, bot.Replies.Error, itemBoxMarkup())
 	}
 }
@@ -334,8 +339,12 @@ func renderInputPrompt(bot *b.Bot, userID int64, isAdd bool, note string) error 
 		return renderAddItemPrompt(bot, userID, nil, note)
 	}
 
-	itemID := bot.ItemsService.GetEditingItemName(userID)
-	return renderEditItemPrompt(bot, userID, nil, itemID, note)
+	itemID := bot.ItemsService.GetEditingItemID(userID)
+	var itemName string
+	if itemID != 0 {
+		itemName, _ = bot.ItemsService.GetItemNameByID(userID, itemID)
+	}
+	return renderEditItemPrompt(bot, userID, nil, itemName, note)
 }
 
 func clearClosedItemBoxMessage(bot *b.Bot, userID int64) {

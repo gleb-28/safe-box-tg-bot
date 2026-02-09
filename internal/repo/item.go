@@ -29,15 +29,15 @@ func (r *ItemRepo) Upsert(item *models.Item) error {
 		Error
 }
 
-func (r *ItemRepo) UpdateName(userID int64, oldName string, newName string) (bool, error) {
+func (r *ItemRepo) UpdateName(userID int64, itemID uint, newName string) (bool, error) {
 	result := r.db.Model(&models.Item{}).
-		Where("user_id = ? AND name = ?", userID, oldName).
+		Where("user_id = ? AND id = ?", userID, itemID).
 		Update("name", newName)
 	return result.RowsAffected > 0, result.Error
 }
 
-func (r *ItemRepo) DeleteByName(userID int64, name string) (bool, error) {
-	result := r.db.Where("user_id = ? AND name = ?", userID, name).
+func (r *ItemRepo) Delete(userID int64, itemID uint) (bool, error) {
+	result := r.db.Where("user_id = ? AND id = ?", userID, itemID).
 		Delete(&models.Item{})
 	return result.RowsAffected > 0, result.Error
 }

@@ -74,7 +74,7 @@ func (s *Service) CreateItem(userID int64, rawName string) error {
 	return err
 }
 
-func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) error {
+func (s *Service) UpdateItemName(userID int64, itemID uint, rawName string) error {
 	if err := s.ensureItemsSessionLoaded(userID); err != nil {
 		return err
 	}
@@ -82,15 +82,14 @@ func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) 
 	if err != nil {
 		return err
 	}
-	if name == itemName {
-		return nil
-	}
 
 	items := s.store.GetItemList(userID)
 	found := false
+	var currentName string
 	for _, item := range items {
-		if item.Name == itemName {
+		if item.ID == itemID {
 			found = true
+			currentName = item.Name
 			continue
 		}
 		if item.Name == name {
@@ -100,8 +99,11 @@ func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) 
 	if !found {
 		return ErrItemNotFound
 	}
+	if currentName == name {
+		return nil
+	}
 
-	updated, err := s.itemRepo.UpdateName(userID, itemName, name)
+	updated, err := s.itemRepo.UpdateName(userID, itemID, name)
 	if err != nil {
 		return err
 	}
@@ -111,14 +113,14 @@ func (s *Service) UpdateItemName(userID int64, itemName string, rawName string) 
 	return s.refreshItems(userID)
 }
 
-func (s *Service) DeleteItem(userID int64, itemName string) error {
+func (s *Service) DeleteItem(userID int64, itemID uint) error {
 	if err := s.ensureItemsSessionLoaded(userID); err != nil {
 		return err
 	}
 	items := s.store.GetItemList(userID)
 	found := false
 	for _, item := range items {
-		if item.Name == itemName {
+		if item.ID == itemID {
 			found = true
 			break
 		}
@@ -127,7 +129,7 @@ func (s *Service) DeleteItem(userID int64, itemName string) error {
 		return ErrItemNotFound
 	}
 
-	deleted, err := s.itemRepo.DeleteByName(userID, itemName)
+	deleted, err := s.itemRepo.Delete(userID, itemID)
 	if err != nil {
 		return err
 	}
@@ -146,16 +148,28 @@ func (s *Service) GetBotLastMsg(userID int64) *telebot.Message {
 	return s.store.GetBotLastMsg(userID)
 }
 
-func (s *Service) GetEditingItemName(userID int64) string {
-	return s.store.GetEditingItemName(userID)
+func (s *Service) GetEditingItemID(userID int64) uint {
+	return s.store.GetEditingItemID(userID)
 }
 
-func (s *Service) SetEditingItemName(userID int64, itemName string) {
-	s.store.SetEditingItemName(userID, itemName)
+func (s *Service) SetEditingItemID(userID int64, itemID uint) {
+	s.store.SetEditingItemID(userID, itemID)
 }
 
-func (s *Service) ClearEditingItemName(userID int64) {
-	s.store.ClearEditingItemName(userID)
+func (s *Service) ClearEditingItemID(userID int64) {
+	s.store.ClearEditingItemID(userID)
+}
+
+func (s *Service) GetItemNameByID(userID int64, itemID uint) (string, error) {
+	if err := s.ensureItemsSessionLoaded(userID); err != nil {
+		return "", err
+	}
+	for _, item := range s.store.GetItemList(userID) {
+		if item.ID == itemID {
+			return item.Name, nil
+		}
+	}
+	return "", ErrItemNotFound
 }
 
 func (s *Service) ensureItemsSessionLoaded(userID int64) error {

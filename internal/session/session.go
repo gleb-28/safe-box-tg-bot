@@ -19,9 +19,9 @@ type Session struct {
 }
 
 type ItemsState struct {
-	EditingItemName string
-	ItemsLoaded     bool
-	ItemList        []models.Item
+	EditingItemID uint
+	ItemsLoaded   bool
+	ItemList      []models.Item
 }
 
 type DaytimeState struct {
@@ -124,19 +124,19 @@ func (store *Store) SetItemList(userID int64, items []models.Item) {
 	})
 }
 
-func (store *Store) GetEditingItemName(userID int64) string {
-	return store.Get(userID).Items.EditingItemName
+func (store *Store) GetEditingItemID(userID int64) uint {
+	return store.Get(userID).Items.EditingItemID
 }
 
-func (store *Store) SetEditingItemName(userID int64, itemName string) {
+func (store *Store) SetEditingItemID(userID int64, itemID uint) {
 	store.Update(userID, func(sess *Session) {
-		sess.Items.EditingItemName = itemName
+		sess.Items.EditingItemID = itemID
 	})
 }
 
-func (store *Store) ClearEditingItemName(userID int64) {
+func (store *Store) ClearEditingItemID(userID int64) {
 	store.Update(userID, func(sess *Session) {
-		sess.Items.EditingItemName = ""
+		sess.Items.EditingItemID = 0
 	})
 }
 

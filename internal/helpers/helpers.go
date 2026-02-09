@@ -5,6 +5,7 @@ import (
 	"safeboxtgbot/internal/core/constants"
 	"safeboxtgbot/models"
 	"safeboxtgbot/pkg/utils"
+	"strconv"
 	"strings"
 	"time"
 
@@ -79,16 +80,20 @@ func FallbackText(name string, fallbackEmojis []string) string {
 	return trimmed + " " + emoji
 }
 
-func ParseItemName(ctx telebot.Context) (string, error) {
+func ParseItemID(ctx telebot.Context) (uint, error) {
 	raw := ctx.Data()
 	if raw == "" && ctx.Callback() != nil {
 		raw = ctx.Callback().Data
 	}
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
-		return "", fmt.Errorf("empty item name")
+		return 0, fmt.Errorf("empty item id")
 	}
-	return raw, nil
+	value, err := strconv.ParseUint(raw, 10, 64)
+	if err != nil || value == 0 {
+		return 0, fmt.Errorf("invalid item id")
+	}
+	return uint(value), nil
 }
 
 func CleanLLMText(raw string) string {
