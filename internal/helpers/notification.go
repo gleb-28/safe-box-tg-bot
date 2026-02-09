@@ -16,6 +16,14 @@ func HumanNotificationStatus(muted bool) string {
 	return "включены"
 }
 
+func FormatTimeHM(minutes int) string {
+	if minutes < 0 {
+		return ""
+	}
+	h, m := utils.MinutesToTime(minutes % 1440)
+	return fmt.Sprintf("%02d:%02d", h, m)
+}
+
 func ParseNotificationPreset(raw string) (constants.NotificationPreset, bool) {
 	preset, ok := constants.NotificationPresets[raw]
 	return preset, ok

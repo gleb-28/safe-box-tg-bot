@@ -63,7 +63,7 @@ LLM generation
 - Responses are trimmed and code fences (json/text) are stripped before delivery; avoid wrapping answers in fences.
 - Must mention the entity and respect the style.
 - Prompt template is loaded from PROMPT_PATH (default: data/prompt).
-- Users can change the style via `/change_mode`; the current mode is hidden in the inline list, and there is a close button. Frequency is changed via `/change_interval` with the same inline flow and preset buttons (current preset is hidden). Notifications can be muted/unmuted via `/toggle_notifications` (current state hidden).
+- Users can change the style via `/change_mode`; the current mode is hidden in the inline list, and there is a close button. Frequency is changed via `/change_interval` with the same inline flow and preset buttons (current preset is hidden). Notifications can be muted/unmuted via `/toggle_notifications` (current state hidden). Day window is set via `/change_daytime` with inline hour slots for start then end, echoing the final window.
 
 Tech stack (for integration)
 - Go, Telebot v4, Looplab FSM, GORM + SQLite, cleanenv.

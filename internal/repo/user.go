@@ -83,3 +83,14 @@ func (r *UserRepo) UpdateNotificationsMuted(telegramID int64, muted bool, next t
 		}).
 		Error
 }
+
+func (r *UserRepo) UpdateDayWindow(telegramID int64, dayStart, dayEnd int16, next time.Time) error {
+	return r.db.Model(&models.User{}).
+		Where("telegram_id = ?", telegramID).
+		Updates(map[string]interface{}{
+			"day_start":         dayStart,
+			"day_end":           dayEnd,
+			"next_notification": next,
+		}).
+		Error
+}

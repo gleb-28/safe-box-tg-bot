@@ -16,6 +16,9 @@ type Replies struct {
 	ChangeIntervalUpdated      string
 	ToggleNotificationsPrompt  string
 	ToggleNotificationsUpdated string
+	ChangeDayStartPrompt       string
+	ChangeDayEndPrompt         string
+	ChangeDayUpdated           string
 
 	AddNewItem          string
 	WriteNewItemName    string
@@ -53,6 +56,9 @@ func NewReplies() *Replies {
 		ChangeIntervalUpdated:      "Частота переключена на \"%s\" (%s) ✅",
 		ToggleNotificationsPrompt:  "Уведомления сейчас %s. Переключить?",
 		ToggleNotificationsUpdated: "Уведомления %s ✅",
+		ChangeDayStartPrompt:       "🕒 Когда можно писать?\nТекущий интервал: %s–%s\n\nВыбери начало дня:",
+		ChangeDayEndPrompt:         "Выбери конец дня (начало: %s):",
+		ChangeDayUpdated:           "Готово ✨\nЯ буду писать с %s до %s",
 
 		AddNewItem:          "✍️ Напиши новую вещь 👇",
 		WriteNewItemName:    "✏️ Напиши новое имя 👇",

@@ -15,12 +15,17 @@ type Session struct {
 	UserLastMsg  *telebot.Message
 	BotLastMsg   *telebot.Message
 	Items        ItemsState
+	Daytime      DaytimeState
 }
 
 type ItemsState struct {
 	EditingItemName string
 	ItemsLoaded     bool
 	ItemList        []models.Item
+}
+
+type DaytimeState struct {
+	StartMinutes int
 }
 type Store struct {
 	sessions map[int64]*Session
@@ -53,6 +58,9 @@ func (store *Store) Get(userID int64) *Session {
 		User: &models.User{},
 		Items: ItemsState{
 			ItemList: make([]models.Item, 0),
+		},
+		Daytime: DaytimeState{
+			StartMinutes: -1,
 		},
 	}
 	store.sessions[userID] = session
@@ -129,5 +137,21 @@ func (store *Store) SetEditingItemName(userID int64, itemName string) {
 func (store *Store) ClearEditingItemName(userID int64) {
 	store.Update(userID, func(sess *Session) {
 		sess.Items.EditingItemName = ""
+	})
+}
+
+func (store *Store) SetDayStartSelection(userID int64, minutes int) {
+	store.Update(userID, func(sess *Session) {
+		sess.Daytime.StartMinutes = minutes
+	})
+}
+
+func (store *Store) GetDayStartSelection(userID int64) int {
+	return store.Get(userID).Daytime.StartMinutes
+}
+
+func (store *Store) ClearDayStartSelection(userID int64) {
+	store.Update(userID, func(sess *Session) {
+		sess.Daytime.StartMinutes = -1
 	})
 }

@@ -132,6 +132,23 @@ func (s *Service) UpdateItemBoxClosedMsgID(userID int64, msgID int) error {
 	return s.userRepo.UpdateItemBoxClosedMsgID(userID, msgID)
 }
 
+func (s *Service) UpdateDayWindow(userID int64, dayStart, dayEnd int) error {
+	s.ensureUserSessionLoaded(userID)
+	if dayStart < 0 || dayStart >= 1440 || dayEnd < 0 || dayEnd >= 1440 || dayStart == dayEnd {
+		return fmt.Errorf("invalid day window: start=%d end=%d", dayStart, dayEnd)
+	}
+
+	var next time.Time
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.User.DayStart = int16(dayStart)
+		sess.User.DayEnd = int16(dayEnd)
+		next = helpers.NextNotificationTime(*sess.User, time.Now().UTC())
+		sess.User.NextNotification = next
+	})
+
+	return s.userRepo.UpdateDayWindow(userID, int16(dayStart), int16(dayEnd), next)
+}
+
 func (s *Service) UpdateItems(userID int64, items []models.Item) error {
 	s.ensureUserSessionLoaded(userID)
 	s.store.SetItemList(userID, items)
@@ -201,4 +218,16 @@ func (s *Service) normalizePreset(preset constants.NotificationPreset) constants
 		preset.Key = constants.DefaultNotificationPreset
 	}
 	return preset
+}
+
+func (s *Service) SetDayStartSelection(userID int64, minutes int) {
+	s.store.SetDayStartSelection(userID, minutes)
+}
+
+func (s *Service) GetDayStartSelection(userID int64) int {
+	return s.store.GetDayStartSelection(userID)
+}
+
+func (s *Service) ClearDayStartSelection(userID int64) {
+	s.store.ClearDayStartSelection(userID)
 }
