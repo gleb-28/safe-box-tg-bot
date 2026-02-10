@@ -93,8 +93,8 @@ func (g *MessageOrchestrator) Generate(ctx context.Context, input LLMInput) (str
 	raw, err := g.llm.Generate(ctx, LLMRequest{
 		SystemPrompt: g.builder.BuildSystem(),
 		UserPrompt:   g.builder.BuildUser(input),
-		Temperature:  0.8,
-		MaxTokens:    180,
+		Temperature:  1.2,
+		MaxTokens:    3000,
 	})
 	if err != nil {
 		return "", err
