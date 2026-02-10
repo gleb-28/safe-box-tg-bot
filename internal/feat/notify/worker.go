@@ -224,7 +224,7 @@ func (w *Worker) generateText(nowUTC time.Time, user models.User, item models.It
 		StyleMode:     helpers.ModeToStyle(user.Mode),
 		RandomSeed:    utils.RandomIntRange(1, 1_000_000),
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 500*time.Second)
 	defer cancel()
 	return w.messageGenerator.Generate(ctx, input)
 }

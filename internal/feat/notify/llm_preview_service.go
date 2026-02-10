@@ -91,7 +91,7 @@ func (s *LLMPreviewService) SendPreviews(ctx context.Context, userID int64) erro
 			RandomSeed:    utils.RandomIntRange(1, 1_000_000),
 		}
 
-		genCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		genCtx, cancel := context.WithTimeout(ctx, 500*time.Second)
 		text, genErr := s.messageGenerator.Generate(genCtx, input)
 		cancel()
 
