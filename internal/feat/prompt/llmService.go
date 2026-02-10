@@ -9,6 +9,7 @@ import (
 
 	"safeboxtgbot/internal/core/logger"
 
+	"github.com/goforj/godump"
 	"github.com/revrost/go-openrouter"
 )
 
@@ -61,6 +62,9 @@ func (s *LLMService) Generate(ctx context.Context, req LLMRequest) (string, erro
 		},
 		Temperature: float32(req.Temperature),
 		MaxTokens:   req.MaxTokens,
+		ResponseFormat: &openrouter.ChatCompletionResponseFormat{
+			Type: openrouter.ChatCompletionResponseFormatTypeText,
+		},
 	})
 	if err != nil {
 		if s.logger != nil {
@@ -73,16 +77,10 @@ func (s *LLMService) Generate(ctx context.Context, req LLMRequest) (string, erro
 	}
 
 	message := resp.Choices[0].Message
-	content := strings.TrimSpace(message.Content.Text)
-	if content == "" && len(message.Content.Multi) > 0 {
-		for _, part := range message.Content.Multi {
-			if part.Type == openrouter.ChatMessagePartTypeText && strings.TrimSpace(part.Text) != "" {
-				content = strings.TrimSpace(part.Text)
-				break
-			}
-		}
-	}
+	content := extractMessageContent(message)
 	if content == "" {
+		s.logger.Error(godump.DumpJSONStr(resp))
+		godump.DumpJSON(resp)
 		return "", errors.New("OpenRouter: empty content")
 	}
 
@@ -91,4 +89,37 @@ func (s *LLMService) Generate(ctx context.Context, req LLMRequest) (string, erro
 	}
 
 	return content, nil
+}
+
+func extractMessageContent(message openrouter.ChatCompletionMessage) string {
+	if trimmed := strings.TrimSpace(message.Content.Text); trimmed != "" {
+		return trimmed
+	}
+	if len(message.Content.Multi) > 0 {
+		for _, part := range message.Content.Multi {
+			if part.Type == openrouter.ChatMessagePartTypeText {
+				if trimmed := strings.TrimSpace(part.Text); trimmed != "" {
+					return trimmed
+				}
+			}
+		}
+	}
+	return messageReasoning(message)
+}
+
+func messageReasoning(message openrouter.ChatCompletionMessage) string {
+	if message.Reasoning != nil {
+		if trimmed := strings.TrimSpace(*message.Reasoning); trimmed != "" {
+			return trimmed
+		}
+	}
+	for _, detail := range message.ReasoningDetails {
+		if trimmed := strings.TrimSpace(detail.Text); trimmed != "" {
+			return trimmed
+		}
+		if trimmed := strings.TrimSpace(detail.Summary); trimmed != "" {
+			return trimmed
+		}
+	}
+	return ""
 }
