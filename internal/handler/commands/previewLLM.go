@@ -10,7 +10,7 @@ import (
 	"gopkg.in/telebot.v4"
 )
 
-func createPreviewLLMHandler(bot *b.Bot, messageGenerator prompt.MessageGenerator) telebot.HandlerFunc {
+func createPreviewLLMHandler(bot *b.Bot, messageGenerator prompt.MessageGenerator, builder prompt.PromptBuilder, fallback prompt.LLMGenerator, forcePreviewFallback bool) telebot.HandlerFunc {
 	return func(ctx telebot.Context) error {
 		if messageGenerator == nil {
 			bot.Logger.Error("LLM preview: message generator is nil")
@@ -21,8 +21,11 @@ func createPreviewLLMHandler(bot *b.Bot, messageGenerator prompt.MessageGenerato
 			bot.UserService,
 			bot.ItemsService,
 			messageGenerator,
+			builder,
+			fallback,
 			bot,
 			bot.Logger,
+			forcePreviewFallback,
 		)
 
 		if err := service.SendPreviews(context.Background(), ctx.Chat().ID); err != nil {

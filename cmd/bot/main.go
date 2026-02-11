@@ -42,12 +42,17 @@ func main() {
 	keyboard.MustInitKeyboardHandler(bot)
 	message.MustInitMessagesHandler(bot)
 
-	llmClient := prompt.MustNewOpenRouterClient(cfg.ModelApiKey, logger)
-	llmService := prompt.MustNewLLMService(llmClient, cfg.ModelName, logger)
+	llmClient := prompt.MustNewOpenRouterClient(cfg.OpenRouterModelApiKey, logger)
+	var groqFallback prompt.LLMGenerator
+	if cfg.GroqAPIKey != "" {
+		groqClient := prompt.MustNewGroqClient(cfg.GroqAPIKey, logger)
+		groqFallback = prompt.MustNewGroqService(groqClient, cfg.GroqModelName, logger)
+	}
+	llmService := prompt.MustNewLLMService(llmClient, cfg.OpenRouterModelName, groqFallback, logger)
 	promptBuilder := prompt.MustNewPromptBuilder(cfg.PromptPath, logger)
 	messageGenerator := prompt.MustNewMessageGenerator(promptBuilder, llmService, logger)
 
-	commands.MustInitAdminCommandsHandler(bot, messageGenerator)
+	commands.MustInitAdminCommandsHandler(bot, messageGenerator, promptBuilder, groqFallback, cfg.ForcePreviewFallback)
 
 	notifyWorker := notify.NewWorker(userService, itemsService, messageLogRepo, messageGenerator, bot, logger)
 	go notifyWorker.Start(context.Background())

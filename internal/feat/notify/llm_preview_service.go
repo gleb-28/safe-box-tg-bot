@@ -18,26 +18,35 @@ import (
 )
 
 type LLMPreviewService struct {
-	userService      *user.Service
-	itemsService     *items.Service
-	messageGenerator prompt.MessageGenerator
-	bot              *b.Bot
-	logger           logger.AppLogger
+	userService          *user.Service
+	itemsService         *items.Service
+	messageGenerator     prompt.MessageGenerator
+	builder              prompt.PromptBuilder
+	fallback             prompt.LLMGenerator
+	bot                  *b.Bot
+	logger               logger.AppLogger
+	forcePreviewFallback bool
 }
 
 func NewLLMPreviewService(
 	userService *user.Service,
 	itemsService *items.Service,
 	messageGenerator prompt.MessageGenerator,
+	builder prompt.PromptBuilder,
+	fallback prompt.LLMGenerator,
 	bot *b.Bot,
 	logger logger.AppLogger,
+	forcePreviewFallback bool,
 ) *LLMPreviewService {
 	return &LLMPreviewService{
-		userService:      userService,
-		itemsService:     itemsService,
-		messageGenerator: messageGenerator,
-		bot:              bot,
-		logger:           logger,
+		userService:          userService,
+		itemsService:         itemsService,
+		messageGenerator:     messageGenerator,
+		builder:              builder,
+		fallback:             fallback,
+		bot:                  bot,
+		logger:               logger,
+		forcePreviewFallback: forcePreviewFallback,
 	}
 }
 
@@ -91,8 +100,35 @@ func (s *LLMPreviewService) SendPreviews(ctx context.Context, userID int64) erro
 			RandomSeed:    utils.RandomIntRange(1, 1_000_000),
 		}
 
-		genCtx, cancel := context.WithTimeout(ctx, 500*time.Second)
-		text, genErr := s.messageGenerator.Generate(genCtx, input)
+		genCtx, cancel := context.WithTimeout(ctx, 5000*time.Second)
+		var (
+			text   string
+			genErr error
+		)
+		if s.forcePreviewFallback {
+			text, genErr = s.generateFallback(genCtx, input)
+			if genErr == nil && text != "" {
+				if s.logger != nil {
+					s.logger.Debug(fmt.Sprintf("LLM preview forced fallback succeeded for userID=%d item=%q", userDTO.TelegramID, item.Name))
+				}
+			} else if s.logger != nil {
+				s.logger.Debug(fmt.Sprintf("LLM preview forced fallback error for userID=%d item=%q: %v", userDTO.TelegramID, item.Name, genErr))
+			}
+		} else {
+			text, genErr = s.messageGenerator.Generate(genCtx, input)
+			if (text == "" || genErr != nil) && s.fallback != nil && s.builder != nil {
+				fallbackText, fallbackErr := s.generateFallback(genCtx, input)
+				if fallbackErr == nil && fallbackText != "" {
+					text = fallbackText
+					genErr = nil
+					if s.logger != nil {
+						s.logger.Debug(fmt.Sprintf("LLM preview fallback succeeded for userID=%d item=%q", userDTO.TelegramID, item.Name))
+					}
+				} else if fallbackErr != nil && s.logger != nil {
+					s.logger.Debug(fmt.Sprintf("LLM preview fallback error for userID=%d item=%q: %v", userDTO.TelegramID, item.Name, fallbackErr))
+				}
+			}
+		}
 		cancel()
 
 		text = strings.TrimSpace(text)
@@ -122,4 +158,17 @@ func previewUserLocation(logger logger.AppLogger, user models.User) *time.Locati
 		return time.UTC
 	}
 	return loc
+}
+
+func (s *LLMPreviewService) generateFallback(ctx context.Context, input prompt.LLMInput) (string, error) {
+	if s.fallback == nil || s.builder == nil {
+		return "", errors.New("no fallback available")
+	}
+	req := prompt.LLMRequest{
+		SystemPrompt: s.builder.BuildSystem(),
+		UserPrompt:   s.builder.BuildUser(input),
+		Temperature:  0.8,
+		MaxTokens:    180,
+	}
+	return s.fallback.Generate(ctx, req)
 }

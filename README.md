@@ -49,18 +49,21 @@ sqlite3 --version
 
 ## ⚙️ Environment variables
 
-Create .env file based on env.example:
+Create `.env` file based on `env.example`. The bot generates messages via OpenRouter, but if OpenRouter replies with reasoning-only content you can supply a Groq key, and the service will fall back automatically.
 ```env
-TG_BOT_TOKEN=              # REQUIRED - Telegram bot token
-LOGGER_BOT_TOKEN=          # OPTIONAL (if used for logging bot)
-ADMIN_ID=                  # REQUIRED - Telegram admin user ID
-ACTIVATION_KEY=            # REQUIRED - password to use the bot
-DB_FILE_NAME=./data/bot.db # REQUIRED - SQLite db file (*.db)
-MODEL_API_KEY=             # REQUIRED - OpenRouter Model API key 
-MODEL_NAME=openrouter/auto # OPTIONAL - OpenRouter model name
-PROMPT_PATH=./data/prompt  # OPTIONAL - LLM prompt file path
-IS_DEBUG=false             # OPTIONAL - print logs for debugging
-```
+TG_BOT_TOKEN=                # REQUIRED - Telegram bot token
+LOGGER_BOT_TOKEN=            # OPTIONAL (if used for logging bot)
+ADMIN_ID=                    # REQUIRED - Telegram admin user ID
+ACTIVATION_KEY=              # REQUIRED - password to use the bot
+DB_FILE_NAME=./data/bot.db   # REQUIRED - SQLite db file (*.db)
+OPENROUTER_API_KEY=          # REQUIRED - OpenRouter Model API key
+OPENROUTER_MODEL_NAME=openrouter/auto        # OPTIONAL - OpenRouter model name
+GROQ_API_KEY=                # OPTIONAL - Groq API key for fallback preview generation
+GROQ_MODEL_NAME=groq/compound       # OPTIONAL - Groq model name
+PROMPT_PATH=./data/prompt    # OPTIONAL - LLM prompt file path
+IS_DEBUG=false               # OPTIONAL - print debug logs
+FORCE_PREVIEW_FALLBACK=false # OPTIONAL - force /preview_llm to generate via the fallback LLM instead of OpenRouter (default false)
+``` 
 ## 📁 Project commands
 Makefile included.
 

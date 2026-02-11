@@ -16,8 +16,11 @@ This file covers local development for Safe Box TG Bot.
    - `ADMIN_ID`
    - `ACTIVATION_KEY`
    - `DB_FILE_NAME` (default `./data/bot.db`)
-   - `MODEL_API_KEY`
-   - `MODEL_NAME` (optional, default `openrouter/auto`)
+   - `OPENROUTER_API_KEY`
+   - `OPENROUTER_MODEL_NAME` (optional, default `openrouter/auto`)
+   - `GROQ_API_KEY` (optional, enables Groq fallback when OpenRouter returns reasoning-only payloads)
+   - `GROQ_MODEL_NAME` (optional, default `groq/compound`)
+   - `FORCE_PREVIEW_FALLBACK` (optional, default `false`; when true `/preview_llm` always runs against the fallback LLM instead of the primary generator)
 3) Ensure the DB directory exists:
    ```bash
    mkdir -p data

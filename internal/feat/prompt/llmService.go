@@ -21,14 +21,15 @@ type LLMRequest struct {
 }
 
 type LLMService struct {
-	client *OpenRouterClient
-	model  string
-	logger logger.AppLogger
+	client   *OpenRouterClient
+	model    string
+	fallback LLMGenerator
+	logger   logger.AppLogger
 }
 
 var _ LLMGenerator = (*LLMService)(nil)
 
-func MustNewLLMService(client *OpenRouterClient, model string, appLogger logger.AppLogger) *LLMService {
+func MustNewLLMService(client *OpenRouterClient, model string, fallback LLMGenerator, appLogger logger.AppLogger) *LLMService {
 	if client == nil {
 		stdlog.Fatal("llm client is nil")
 	}
@@ -37,9 +38,10 @@ func MustNewLLMService(client *OpenRouterClient, model string, appLogger logger.
 		stdlog.Fatal("llm model is empty")
 	}
 	return &LLMService{
-		client: client,
-		model:  trimmedModel,
-		logger: appLogger,
+		client:   client,
+		model:    trimmedModel,
+		fallback: fallback,
+		logger:   appLogger,
 	}
 }
 
@@ -70,18 +72,20 @@ func (s *LLMService) Generate(ctx context.Context, req LLMRequest) (string, erro
 		if s.logger != nil {
 			s.logger.Debug(fmt.Sprintf("LLM generate failed model=%s: %v", s.model, err))
 		}
-		return "", err
+		return s.tryFallback(ctx, req, fmt.Errorf("OpenRouter chat failed: %w", err))
 	}
 	if len(resp.Choices) == 0 {
-		return "", errors.New("OpenRouter: empty choices")
+		return s.tryFallback(ctx, req, errors.New("OpenRouter: empty choices"))
 	}
 
 	message := resp.Choices[0].Message
 	content := extractMessageContent(message)
 	if content == "" {
-		s.logger.Error(godump.DumpJSONStr(resp))
+		if s.logger != nil {
+			s.logger.Error(godump.DumpJSONStr(resp))
+		}
 		godump.DumpJSON(resp)
-		return "", errors.New("OpenRouter: empty content")
+		return s.tryFallback(ctx, req, errors.New("OpenRouter: empty content"))
 	}
 
 	if s.logger != nil {
@@ -122,4 +126,26 @@ func messageReasoning(message openrouter.ChatCompletionMessage) string {
 		}
 	}
 	return ""
+}
+
+func (s *LLMService) tryFallback(ctx context.Context, req LLMRequest, cause error) (string, error) {
+	if s.fallback == nil {
+		return "", cause
+	}
+	if s.logger != nil {
+		s.logger.Debug(fmt.Sprintf("OpenRouter failed, falling back: %v", cause))
+	}
+
+	result, err := s.fallback.Generate(ctx, req)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.Debug(fmt.Sprintf("Fallback generate failed: %v", err))
+		}
+		return "", fmt.Errorf("%v; fallback: %w", cause, err)
+	}
+
+	if s.logger != nil {
+		s.logger.Debug("Fallback generate succeeded")
+	}
+	return result, nil
 }

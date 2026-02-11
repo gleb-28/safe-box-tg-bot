@@ -67,7 +67,7 @@ LLM generation
 
 Tech stack (for integration)
 - Go, Telebot v4, Looplab FSM, GORM + SQLite, cleanenv.
-- Config via env/.env (TG_BOT_TOKEN, ACTIVATION_KEY, MODEL_API_KEY, MODEL_NAME, PROMPT_PATH, DB_FILE_NAME).
+- Config via env/.env (TG_BOT_TOKEN, ACTIVATION_KEY, OPENROUTER_API_KEY, OPENROUTER_MODEL_NAME, optional DEEPSEEK_API_KEY/DEEPSEEK_MODEL_NAME, PROMPT_PATH, DB_FILE_NAME).
 
 Working rules for changes
 - Load the user into the session first, then update fields.
