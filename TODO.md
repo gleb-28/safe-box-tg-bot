@@ -21,6 +21,8 @@
   _Notes_: Режим: cozy, Вещей: 5, Окно: 12:00–22:00
 - [ ] **Handle no user in db**
   _Notes_: `func (r *UserRepo) TryGet(id int64) (*models.User, bool, error)`
+- [ ] **Reminders feature**
+  _Notes_: Allow users to set a reminder time/window for an item so the bot nudges them when the reminder is due.
 
   
 ### P3 — nice-to-have
@@ -29,5 +31,4 @@
   _Notes_: Run `go test ./...` and `gofmt` on pushes/PRs (GitHub Actions)
 
 ## Done
-
 
