@@ -12,6 +12,8 @@ Safe Box is a Telegram bot that sends short, human-like nudges during the day ba
 Access is gated by an activation key.
 Users can switch the message style at any time with `/change_mode` (buttons: rofl/cozy/care + close), adjust the frequency with `/change_interval`, quickly mute/unmute with `/toggle_notifications`, and set the day window via `/change_daytime` using hour slots.
 
+When the item box is open, the header shows a status line: current mode, item count, and the configured day window (HH:MM–HH:MM) in bold.
+
 Active hours are stored as DayStart/DayEnd minutes in 24-hour format; the notification worker runs once on startup
 and then periodically to process due users. If `NextNotification` is overdue beyond the max interval, it is recalculated
 from "now" without sending. Each successful notification is logged at info level with user ID, item ID, name, and the

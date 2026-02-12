@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"safeboxtgbot/internal/helpers"
-	"safeboxtgbot/internal/middleware/auth"
-	"strings"
-
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/feat/items"
 	fsmManager "safeboxtgbot/internal/fsm"
+	"safeboxtgbot/internal/helpers"
+	"safeboxtgbot/internal/middleware/auth"
 	"safeboxtgbot/models"
+	"strings"
 
 	"gopkg.in/telebot.v4"
 )
@@ -178,17 +177,19 @@ func createDeleteItemSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 }
 
 func renderItemBox(bot *b.Bot, userID int64, sourceMsg *telebot.Message) error {
+	user := bot.UserService.GetUser(userID)
 	itemList, err := bot.ItemsService.GetItemList(userID)
 	if err != nil {
 		return upsertBotLastMessage(bot, userID, sourceMsg, bot.Replies.Error, itemBoxMarkup())
 	}
+	status := buildItemBoxStatus(bot, user, len(itemList))
 
 	var text string
 	if len(itemList) == 0 {
-		text = bot.Replies.ItemsMenuEmpty
+		text = fmt.Sprintf(bot.Replies.ItemsMenuEmpty, status)
 	} else {
 		var builder strings.Builder
-		builder.WriteString(bot.Replies.ItemsMenuHeader)
+		builder.WriteString(fmt.Sprintf(bot.Replies.ItemsMenuHeader, status))
 		for _, item := range itemList {
 			builder.WriteString(bot.Replies.ItemsMenuItemPrefix)
 			builder.WriteString(item.Name)
@@ -199,6 +200,17 @@ func renderItemBox(bot *b.Bot, userID int64, sourceMsg *telebot.Message) error {
 	}
 
 	return upsertBotLastMessage(bot, userID, sourceMsg, text, itemBoxMarkup())
+}
+
+func buildItemBoxStatus(bot *b.Bot, user *models.User, itemCount int) string {
+	if user == nil {
+		user = &models.User{}
+	}
+	mode := helpers.HumanModeName(user.Mode)
+	dayStart := helpers.FormatTimeHM(int(user.DayStart))
+	dayEnd := helpers.FormatTimeHM(int(user.DayEnd))
+
+	return fmt.Sprintf(bot.Replies.ItemsMenuStatus, mode, itemCount, dayStart, dayEnd)
 }
 
 func renderAddItemPrompt(bot *b.Bot, userID int64, sourceMsg *telebot.Message, note string) error {

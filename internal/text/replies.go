@@ -28,6 +28,7 @@ type Replies struct {
 	ListIsEmpty         string
 	ItemsMenuEmpty      string
 	ItemsMenuHeader     string
+	ItemsMenuStatus     string
 	ItemsMenuFooter     string
 	ItemsMenuItemPrefix string
 	ItemsLimitReached   string
@@ -66,8 +67,9 @@ func NewReplies() *Replies {
 		WhatDoWeEdit:        "Что изменить?",
 		WhatDoWeDelete:      "Что удалить?",
 		ListIsEmpty:         "Список пуст",
-		ItemsMenuEmpty:      "📦 Твои вещи:\n\n(пока пусто)\n\nЧто делаем?",
-		ItemsMenuHeader:     "📦 Твои вещи:\n\n",
+		ItemsMenuEmpty:      "%s\n📦 Твои вещи\n\n(пока пусто)\n\nЧто делаем?",
+		ItemsMenuHeader:     "%s\n📦 Твои вещи:\n\n",
+		ItemsMenuStatus:     "Режим: <b>%s</b> • Вещей: <b>%d</b> • Окно: <b>%s–%s</b>\n",
 		ItemsMenuFooter:     "\nЧто делаем?",
 		ItemsMenuItemPrefix: "• ",
 		ItemsLimitReached:   "Достигнут лимит вещей. Удали что-то и попробуй снова",

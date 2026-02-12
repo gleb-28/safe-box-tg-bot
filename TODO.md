@@ -17,8 +17,6 @@
 
 ### P2 — soon
 
-- [ ] **Add status to open box**
-  _Notes_: Режим: cozy, Вещей: 5, Окно: 12:00–22:00
 - [ ] **Handle no user in db**
   _Notes_: `func (r *UserRepo) TryGet(id int64) (*models.User, bool, error)`
 - [ ] **Reminders feature**
@@ -32,3 +30,5 @@
 
 ## Done
 
+- [x] **Add status to open box**
+  _Notes_: Режим: cozy, Вещей: 5, Окно: 12:00–22:00

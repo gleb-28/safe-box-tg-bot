@@ -56,6 +56,7 @@ FSM and access
   - wrong key → error and return to initial.
 - Auth middleware: if user is not in DB, the bot is silent.
 - When closing the item box, send "Шкатулка закрыта" with the main menu keyboard and store the message ID to remove it on next open.
+- When opening the item box, prefix the list with a bold status line showing current mode, item count, and the user’s day window (HH:MM–HH:MM).
 
 LLM generation
 - Input: current_entity, time_of_day (morning/day/evening or empty), style_mode, random_seed.
