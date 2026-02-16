@@ -19,8 +19,6 @@
 
 - [ ] **Handle no user in db**
   _Notes_: `func (r *UserRepo) TryGet(id int64) (*models.User, bool, error)`
-- [ ] **Reminders feature**
-  _Notes_: Allow users to set a reminder time/window for an item so the bot nudges them when the reminder is due.
 
   
 ### P3 — nice-to-have
@@ -32,3 +30,5 @@
 
 - [x] **Add status to open box**
   _Notes_: Режим: cozy, Вещей: 5, Окно: 12:00–22:00
+- [x] **Reminders feature**
+  _Notes_: Allow users to set a reminder time/window for an item so the bot nudges them when the reminder is due.
