@@ -110,7 +110,20 @@ func CleanLLMText(raw string) string {
 			}
 		}
 	}
-	return strings.TrimSpace(trimmed)
+	// If model returns reasoning + final text separated by newlines,
+	// keep only the last non-empty line to avoid leaking deliberations.
+	lines := strings.Split(trimmed, "\n")
+	candidates := make([]string, 0, len(lines))
+	for _, ln := range lines {
+		t := strings.TrimSpace(ln)
+		if t != "" {
+			candidates = append(candidates, t)
+		}
+	}
+	if len(candidates) == 0 {
+		return ""
+	}
+	return candidates[len(candidates)-1]
 }
 
 func DaysInMonth(year int, month time.Month) int {
