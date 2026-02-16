@@ -5,17 +5,20 @@ import (
 	"safeboxtgbot/internal/core/logger"
 	"safeboxtgbot/models"
 	"sync"
+	"time"
 
 	"gopkg.in/telebot.v4"
 )
 
 type Session struct {
-	User         *models.User
-	UserIsLoaded bool
-	UserLastMsg  *telebot.Message
-	BotLastMsg   *telebot.Message
-	Items        ItemsState
-	Daytime      DaytimeState
+	User               *models.User
+	UserIsLoaded       bool
+	UserLastMsg        *telebot.Message
+	BotLastMsg         *telebot.Message
+	ReminderBotLastMsg *telebot.Message
+	Items              ItemsState
+	Daytime            DaytimeState
+	Reminders          RemindersState
 }
 
 type ItemsState struct {
@@ -26,6 +29,22 @@ type ItemsState struct {
 
 type DaytimeState struct {
 	StartMinutes int
+}
+
+type RemindersState struct {
+	Pending *PendingReminder
+	Loaded  bool
+	List    []models.Reminder
+}
+
+type PendingReminder struct {
+	EntityName       string
+	ScheduleType     models.ReminderSchedule
+	IntervalMinutes  *int32
+	TimeOfDayMinutes *int16
+	Weekday          *int8
+	MonthDay         *int8
+	OnceDate         *time.Time
 }
 type Store struct {
 	sessions map[int64]*Session
@@ -62,6 +81,7 @@ func (store *Store) Get(userID int64) *Session {
 		Daytime: DaytimeState{
 			StartMinutes: -1,
 		},
+		Reminders: RemindersState{},
 	}
 	store.sessions[userID] = session
 	store.logger.Info(fmt.Sprintf("New session created for userID=%d", userID))
@@ -102,6 +122,16 @@ func (store *Store) SetBotLastMsg(userID int64, msg *telebot.Message) {
 	})
 }
 
+func (store *Store) SetReminderBotLastMsg(userID int64, msg *telebot.Message) {
+	store.Update(userID, func(sess *Session) {
+		sess.ReminderBotLastMsg = msg
+	})
+}
+
+func (store *Store) GetReminderBotLastMsg(userID int64) *telebot.Message {
+	return store.Get(userID).ReminderBotLastMsg
+}
+
 func (store *Store) GetBotLastMsg(userID int64) *telebot.Message {
 	return store.Get(userID).BotLastMsg
 }
@@ -140,18 +170,57 @@ func (store *Store) ClearEditingItemID(userID int64) {
 	})
 }
 
+func (store *Store) GetDayStartSelection(userID int64) int {
+	return store.Get(userID).Daytime.StartMinutes
+}
+
 func (store *Store) SetDayStartSelection(userID int64, minutes int) {
 	store.Update(userID, func(sess *Session) {
 		sess.Daytime.StartMinutes = minutes
 	})
 }
 
-func (store *Store) GetDayStartSelection(userID int64) int {
-	return store.Get(userID).Daytime.StartMinutes
-}
-
 func (store *Store) ClearDayStartSelection(userID int64) {
 	store.Update(userID, func(sess *Session) {
 		sess.Daytime.StartMinutes = -1
+	})
+}
+
+func (store *Store) GetPendingReminder(userID int64) *PendingReminder {
+	return store.Get(userID).Reminders.Pending
+}
+
+func (store *Store) SetPendingReminder(userID int64, pending *PendingReminder) {
+	store.Update(userID, func(sess *Session) {
+		sess.Reminders.Pending = pending
+	})
+}
+
+func (store *Store) ClearPendingReminder(userID int64) {
+	store.Update(userID, func(sess *Session) {
+		sess.Reminders.Pending = nil
+	})
+}
+
+func (store *Store) IsRemindersLoaded(userID int64) bool {
+	return store.Get(userID).Reminders.Loaded
+}
+
+func (store *Store) GetReminderList(userID int64) []models.Reminder {
+	return store.Get(userID).Reminders.List
+}
+
+func (store *Store) SetReminderList(userID int64, reminders []models.Reminder) {
+	store.Update(userID, func(sess *Session) {
+		sess.Reminders.List = reminders
+		sess.Reminders.Loaded = true
+	})
+}
+
+func (store *Store) ClearReminders(userID int64) {
+	store.Update(userID, func(sess *Session) {
+		sess.Reminders.List = nil
+		sess.Reminders.Loaded = false
+		sess.Reminders.Pending = nil
 	})
 }

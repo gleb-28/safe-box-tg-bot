@@ -18,6 +18,9 @@ const (
 	StateItemEditSelectOpened   = "item_edit_select_opened"
 	StateAwaitingItemEdit       = "awaiting_item_edit"
 	StateItemDeleteSelectOpened = "item_delete_select_opened"
+	StateRemindersMenuOpened    = "reminders_menu_opened"
+	StateAwaitingReminderAdd    = "awaiting_reminder_add"
+	StateReminderDeleteSelect   = "reminder_delete_select"
 )
 
 const (
@@ -28,6 +31,9 @@ const (
 	ItemEditSelectOpenedEvent   = "item_edit_select_opened__event"
 	AwaitingItemEditEvent       = "awaiting_item_edit__event"
 	ItemDeleteSelectOpenedEvent = "item_delete_select_opened__event"
+	RemindersMenuOpenedEvent    = "reminders_menu_opened__event"
+	AwaitingReminderAddEvent    = "awaiting_reminder_add__event"
+	ReminderDeleteSelectEvent   = "reminder_delete_select__event"
 )
 
 var events = []f.EventDesc{
@@ -41,6 +47,9 @@ var events = []f.EventDesc{
 			StateItemEditSelectOpened,
 			StateAwaitingItemEdit,
 			StateItemDeleteSelectOpened,
+			StateRemindersMenuOpened,
+			StateAwaitingReminderAdd,
+			StateReminderDeleteSelect,
 		},
 		Dst: StateInitial,
 	},
@@ -54,6 +63,9 @@ var events = []f.EventDesc{
 			StateItemEditSelectOpened,
 			StateAwaitingItemEdit,
 			StateItemDeleteSelectOpened,
+			StateRemindersMenuOpened,
+			StateAwaitingReminderAdd,
+			StateReminderDeleteSelect,
 		},
 		Dst: StateItemsMenuOpened,
 	},
@@ -61,6 +73,9 @@ var events = []f.EventDesc{
 	{Name: ItemEditSelectOpenedEvent, Src: []string{StateInitial, StateItemsMenuOpened}, Dst: StateItemEditSelectOpened},
 	{Name: AwaitingItemEditEvent, Src: []string{StateInitial, StateItemEditSelectOpened}, Dst: StateAwaitingItemEdit},
 	{Name: ItemDeleteSelectOpenedEvent, Src: []string{StateInitial, StateItemsMenuOpened}, Dst: StateItemDeleteSelectOpened},
+	{Name: RemindersMenuOpenedEvent, Src: []string{StateInitial, StateItemsMenuOpened, StateReminderDeleteSelect, StateAwaitingReminderAdd}, Dst: StateRemindersMenuOpened},
+	{Name: AwaitingReminderAddEvent, Src: []string{StateRemindersMenuOpened, StateReminderDeleteSelect}, Dst: StateAwaitingReminderAdd},
+	{Name: ReminderDeleteSelectEvent, Src: []string{StateRemindersMenuOpened}, Dst: StateReminderDeleteSelect},
 }
 
 type FSMState struct {

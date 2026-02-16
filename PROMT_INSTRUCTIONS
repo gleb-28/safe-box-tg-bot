@@ -11,6 +11,7 @@ Message behavior
 - Vary sentence structure; avoid moralizing or explanations.
 - Sometimes suggest alternatives (rare).
 - Use time_of_day rarely and subtly.
+- The same rules apply when the entity comes from reminders (named reminders use the same generator).
 
 Styles (mode)
 - rofl: meme-like absurdity.
@@ -30,6 +31,7 @@ Notifications
 - Notifications use LLM generation; if it fails, send the item's name plus an emoji.
 - If NextNotification is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Avoid repeating the same item within the cooldown window (last 360 minutes); if all items are recent, allow repeats.
+- Reminders: separate worker (tick 30s) uses the same generator with the reminder name as entity; daily/weekly/monthly reminders respect the user day window (clamped at creation), interval reminders ignore time-of-day windows, one-time reminders are deleted after send; retries use the notification retry minutes.
 
 Data and models (GORM)
 - User: TelegramID, Mode, Timezone, DayStart, DayEnd, NotificationPreset, NotificationIntervalMinMinutes, NotificationIntervalMaxMinutes, NotificationsMuted, NextNotification, ItemBoxClosedMsgID, Items.

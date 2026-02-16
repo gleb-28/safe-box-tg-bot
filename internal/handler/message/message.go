@@ -26,6 +26,8 @@ func createMessageHandler(bot *b.Bot) telebot.HandlerFunc {
 			return keyboard.CreateValidateAddItemHandler(bot)(ctx)
 		case fsmManager.StateAwaitingItemEdit:
 			return keyboard.CreateValidateEditItemHandler(bot)(ctx)
+		case fsmManager.StateAwaitingReminderAdd:
+			return keyboard.CreateValidateAddReminderHandler(bot)(ctx)
 		default:
 			return nil
 		}

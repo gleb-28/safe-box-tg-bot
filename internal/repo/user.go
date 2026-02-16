@@ -55,6 +55,13 @@ func (r *UserRepo) UpdateItemBoxClosedMsgID(telegramID int64, msgID int) error {
 		Error
 }
 
+func (r *UserRepo) UpdateReminderBoxClosedMsgID(telegramID int64, msgID int) error {
+	return r.db.Model(&models.User{}).
+		Where("telegram_id = ?", telegramID).
+		Update("reminder_box_closed_msg_id", msgID).
+		Error
+}
+
 func (r *UserRepo) UpdateMode(telegramID int64, mode models.UserMode) error {
 	return r.db.Model(&models.User{}).
 		Where("telegram_id = ?", telegramID).

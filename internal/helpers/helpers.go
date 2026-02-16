@@ -112,3 +112,54 @@ func CleanLLMText(raw string) string {
 	}
 	return strings.TrimSpace(trimmed)
 }
+
+func DaysInMonth(year int, month time.Month) int {
+	return time.Date(year, month+1, 0, 0, 0, 0, 0, time.UTC).Day()
+}
+
+// ValidTimeOfDay returns true when minutes is within a single day.
+func ValidTimeOfDay(minutes int) bool {
+	return minutes >= 0 && minutes < constants.MinutesInDay
+}
+
+func NormalizeReminderName(raw string, emptyErr, tooLongErr error) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", emptyErr
+	}
+	if len([]rune(trimmed)) > constants.MaxReminderNameLen {
+		return "", tooLongErr
+	}
+	return trimmed, nil
+}
+
+// ParseDateDM parses "DD.MM" using provided now for year defaults and loc.
+func ParseDateDM(raw string, now time.Time, loc *time.Location) (time.Time, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return time.Time{}, fmt.Errorf("empty date")
+	}
+	if loc == nil {
+		loc = time.UTC
+	}
+	var d, m int
+	n, err := fmt.Sscanf(trimmed, "%d.%d", &d, &m)
+	if err != nil || n != 2 {
+		return time.Time{}, fmt.Errorf("invalid format")
+	}
+	if d < 1 || d > 31 || m < 1 || m > 12 {
+		return time.Time{}, fmt.Errorf("invalid range")
+	}
+	year := now.In(loc).Year()
+	candidate := time.Date(year, time.Month(m), d, 0, 0, 0, 0, loc)
+	return candidate, nil
+}
+
+// ComposeDateTime combines date (treated in loc) with minutes of day, returns UTC time.
+func ComposeDateTime(date time.Time, minutes int, loc *time.Location) time.Time {
+	if loc == nil {
+		loc = time.UTC
+	}
+	localDate := date.In(loc)
+	return time.Date(localDate.Year(), localDate.Month(), localDate.Day(), minutes/constants.MinutesInHour, minutes%constants.MinutesInHour, 0, 0, loc).UTC()
+}

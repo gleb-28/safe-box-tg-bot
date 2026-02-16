@@ -72,6 +72,14 @@ Set `IS_DEBUG=true` in `.env` to enable debug logs.
 - If `NextNotification` is overdue beyond the max interval (or zero), recalculate it from now without sending.
 - Randomized interval is 40–150 minutes (40min–2.5 hours), stored/treated in minutes across the system.
 
+## Reminders
+- Separate feature from items: users create named reminders with schedules: Interval (minutes), Daily, Weekly, Monthly, Once.
+- Time is interpreted in the user’s timezone. Daily/weekly/monthly times are clamped to the active window at creation; if outside, the time is adjusted and a notice is shown.
+- One-time reminders are deleted after sending; interval/periodic reminders are rescheduled by the reminder worker.
+- Reminder worker interval: 30s. Skips muted users and those outside the day window; retries after failures use the notification retry minutes.
+- Duplicate reminder names per user are rejected.
+- UI entry point: main menu button “Открыть напоминания”.
+
 ## Item box UI
 - On close, the bot sends "Шкатулка закрыта" with the main menu keyboard.
 - The message ID is stored on the user and deleted on next open (so restarts can clean up the old message).

@@ -23,6 +23,15 @@ LLM requests go through OpenRouter using the prompt in `data/prompt`; replies ar
 `json`/`text` code fences before sending. If generation fails, the item name plus an emoji (palette in
 `internal/core/constants`) is sent as a fallback.
 
+### 🔔 Reminders
+- Separate from items: users create named reminders with their own schedules.
+- Schedules: `Интервал` (N minutes), `Ежедневно`, `Еженедельно`, `Ежемесячно`, `Один раз`.
+- Time is interpreted in the user's timezone; daily/weekly/monthly times are clamped to the active window; if outside window, time is adjusted and noted.
+- One-time reminders are removed after sending; interval/periodic ones are rescheduled via the reminder scheduler.
+- Duplicate reminder names per user are blocked.
+- Reminders are managed from the main menu button “Открыть напоминания”.
+- Reminder worker ticks every 30s, skips muted users or those outside the day window, and retries after failures using the existing notification retry settings.
+
 ## 🔒 Limits
 
 - Max items per user: 200.

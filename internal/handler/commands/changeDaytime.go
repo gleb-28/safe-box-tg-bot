@@ -107,6 +107,14 @@ func createDayEndSelectHandler(bot *b.Bot) telebot.HandlerFunc {
 		}
 		bot.UserService.ClearDayStartSelection(userID)
 
+		// Clamp existing reminders into the new active window.
+		if user := bot.UserService.GetUser(userID); user != nil {
+			loc, _ := helpers.UserLocation(*user)
+			if err := bot.ReminderService.ClampToActiveWindow(*user, time.Now().UTC(), loc); err != nil {
+				bot.Logger.Error(fmt.Sprintf("Error clamping reminders for userID=%d: %v", userID, err))
+			}
+		}
+
 		if ctx.Message() != nil {
 			bot.MustDelete(ctx.Message())
 		}

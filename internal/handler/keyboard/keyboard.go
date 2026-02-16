@@ -10,7 +10,9 @@ import (
 
 func MustInitKeyboardHandler(bot *b.Bot) {
 	bot.Handle(OpenItemBoxLabel, createOpenItemBoxBtnHandler(bot), auth.CreateAuthMiddleware(bot))
+	bot.Handle(OpenReminderBoxLabel, createOpenReminderBoxBtnHandler(bot), auth.CreateAuthMiddleware(bot))
 	MustInitItemBoxButtons(bot)
+	MustInitReminderBoxButtons(bot)
 }
 
 func createOpenItemBoxBtnHandler(bot *b.Bot) telebot.HandlerFunc {
@@ -19,6 +21,18 @@ func createOpenItemBoxBtnHandler(bot *b.Bot) telebot.HandlerFunc {
 		if bot.Fsm.GetFSMForUser(userID).Current() == fsmManager.StateInitial {
 			bot.MustDelete(ctx.Message())
 			return OpenItemBox(bot, userID, nil)
+		}
+		bot.MustDelete(ctx.Message())
+		return nil
+	}
+}
+
+func createOpenReminderBoxBtnHandler(bot *b.Bot) telebot.HandlerFunc {
+	return func(ctx telebot.Context) error {
+		userID := ctx.Chat().ID
+		if bot.Fsm.GetFSMForUser(userID).Current() == fsmManager.StateInitial {
+			bot.MustDelete(ctx.Message())
+			return OpenReminderBox(bot, userID, nil)
 		}
 		bot.MustDelete(ctx.Message())
 		return nil

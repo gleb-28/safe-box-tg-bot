@@ -132,6 +132,14 @@ func (s *Service) UpdateItemBoxClosedMsgID(userID int64, msgID int) error {
 	return s.userRepo.UpdateItemBoxClosedMsgID(userID, msgID)
 }
 
+func (s *Service) UpdateReminderBoxClosedMsgID(userID int64, msgID int) error {
+	s.ensureUserSessionLoaded(userID)
+	s.store.Update(userID, func(sess *session.Session) {
+		sess.User.ReminderBoxClosedMsgID = msgID
+	})
+	return s.userRepo.UpdateReminderBoxClosedMsgID(userID, msgID)
+}
+
 func (s *Service) UpdateDayWindow(userID int64, dayStart, dayEnd int) error {
 	s.ensureUserSessionLoaded(userID)
 	if dayStart < 0 || dayStart >= 1440 || dayEnd < 0 || dayEnd >= 1440 || dayStart == dayEnd {

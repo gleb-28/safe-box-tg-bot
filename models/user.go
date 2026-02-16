@@ -21,7 +21,9 @@ type User struct {
 	NotificationsMuted             bool      `gorm:"not null;default:false"`
 	NextNotification               time.Time `gorm:"index"`
 	ItemBoxClosedMsgID             int       `gorm:"not null;default:0"`
+	ReminderBoxClosedMsgID         int       `gorm:"not null;default:0"`
 	Items                          []Item
+	Reminders                      []Reminder
 }
 
 type Item struct {

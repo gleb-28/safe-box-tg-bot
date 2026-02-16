@@ -48,5 +48,10 @@ func MustDB(config *config.AppConfig, logger logger.AppLogger) *gorm.DB {
 		log.Fatal("Failed to AutoMigrate MessageLog: " + err.Error())
 	}
 
+	err = db.AutoMigrate(&models.Reminder{})
+	if err != nil {
+		log.Fatal("Failed to AutoMigrate Reminder: " + err.Error())
+	}
+
 	return db
 }

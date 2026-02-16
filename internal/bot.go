@@ -6,6 +6,7 @@ import (
 	"safeboxtgbot/internal/core/config"
 	"safeboxtgbot/internal/core/logger"
 	"safeboxtgbot/internal/feat/items"
+	"safeboxtgbot/internal/feat/reminder"
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/text"
@@ -17,12 +18,13 @@ import (
 
 type Bot struct {
 	*telebot.Bot
-	Fsm          *fsmManager.FSMState
-	UserService  *user.Service
-	ItemsService *items.Service
-	Config       *config.AppConfig
-	Replies      *text.Replies
-	Logger       logger.AppLogger
+	Fsm             *fsmManager.FSMState
+	UserService     *user.Service
+	ItemsService    *items.Service
+	ReminderService *reminder.Service
+	Config          *config.AppConfig
+	Replies         *text.Replies
+	Logger          logger.AppLogger
 }
 
 func (bot *Bot) MustSend(userID int64, what interface{}, opts ...interface{}) *telebot.Message {
@@ -72,6 +74,7 @@ func MustBot(
 	fsm *fsmManager.FSMState,
 	userService *user.Service,
 	itemsService *items.Service,
+	reminderService *reminder.Service,
 	replies *text.Replies,
 	logger logger.AppLogger) *Bot {
 	bot, err := telebot.NewBot(telebot.Settings{
@@ -87,12 +90,13 @@ func MustBot(
 	}
 
 	return &Bot{
-		Bot:          bot,
-		Fsm:          fsm,
-		UserService:  userService,
-		ItemsService: itemsService,
-		Config:       config,
-		Replies:      replies,
-		Logger:       logger,
+		Bot:             bot,
+		Fsm:             fsm,
+		UserService:     userService,
+		ItemsService:    itemsService,
+		ReminderService: reminderService,
+		Config:          config,
+		Replies:         replies,
+		Logger:          logger,
 	}
 }
