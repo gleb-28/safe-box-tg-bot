@@ -9,12 +9,10 @@ const (
 )
 
 const (
-	MaxItemsPerUser = 200
-	MaxItemNameLen  = 40
-)
-
-const (
+	MaxItemsPerUser    = 200
+	MaxItemNameLen     = 40
 	MaxReminderNameLen = 120
+	ReminderPrefix     = "⏰ "
 )
 
 const (
@@ -26,11 +24,6 @@ const (
 	ReminderWorkerIntervalSeconds         = 30
 )
 
-var FallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
-var WeekdayShortRu = []string{"пн", "вт", "ср", "чт", "пт", "сб", "вс"}
-
-const ReminderPrefix = "⏰ "
-
 const (
 	DefaultDayStartMinutes = 720  // 12:00
 	DefaultDayEndMinutes   = 1320 // 22:00
@@ -41,4 +34,9 @@ const (
 	MinutesInHour = 60
 	MinutesInDay  = 24 * MinutesInHour
 	DaysInWeek    = 7
+)
+
+var (
+	FallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
+	WeekdayShortRu = []string{"пн", "вт", "ср", "чт", "пт", "сб", "вс"}
 )
