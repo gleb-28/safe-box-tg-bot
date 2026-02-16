@@ -1,5 +1,7 @@
 package text
 
+import "safeboxtgbot/internal/core/constants"
+
 type Replies struct {
 	Start             string
 	EnterKey          string
@@ -20,32 +22,26 @@ type Replies struct {
 	ChangeDayEndPrompt         string
 	ChangeDayUpdated           string
 
-	AddNewItem          string
-	WriteNewItemName    string
-	NewNameForValue     string
-	WhatDoWeEdit        string
-	WhatDoWeDelete      string
-	ListIsEmpty         string
-	ItemsMenuEmpty      string
-	ItemsMenuHeader     string
-	ItemsMenuStatus     string
-	ItemsMenuFooter     string
-	ItemsMenuItemPrefix string
-	ItemsLimitReached   string
-	ItemDuplicate       string
-	ItemNameEmpty       string
-	ItemNameTooLong     string
-	ItemsErrEmptyID     string
-	ItemsErrInvalidID   string
-	ItemsErrEmptyName   string
-
-	OpenReminderBox         string
+	AddNewItem              string
+	WriteNewItemName        string
+	NewNameForValue         string
+	WhatDoWeEdit            string
+	WhatDoWeDelete          string
+	ListIsEmpty             string
+	ItemsMenuEmpty          string
+	ItemsMenuHeader         string
+	ItemsMenuStatus         string
+	ItemsMenuFooter         string
+	ItemsMenuItemPrefix     string
+	ItemsLimitReached       string
+	ItemDuplicate           string
+	ItemNameEmpty           string
+	ItemNameTooLong         string
 	ReminderBoxClosed       string
 	RemindersMenuEmpty      string
 	RemindersMenuHeader     string
 	RemindersMenuFooter     string
 	RemindersMenuItemRow    string
-	RemindersLimitReached   string
 	ReminderNamePrompt      string
 	ReminderNameEmpty       string
 	ReminderNameTooLong     string
@@ -110,13 +106,11 @@ func NewReplies() *Replies {
 		ItemNameEmpty:       "Пустое название. Напиши ещё раз",
 		ItemNameTooLong:     "Слишком длинно. Сократи название",
 
-		OpenReminderBox:         "Открыть напоминания 🔔",
 		ReminderBoxClosed:       "Напоминания закрыты 🔒",
-		RemindersMenuEmpty:      "%s\n🔔 Твои напоминания\n\n(пока пусто)\n\nЧто делаем?",
-		RemindersMenuHeader:     "%s\n🔔 Твои напоминания:\n\n",
+		RemindersMenuEmpty:      "%s\n" + constants.ReminderPrefix + "Твои напоминания\n\n(пока пусто)\n\nЧто делаем?",
+		RemindersMenuHeader:     "%s\n" + constants.ReminderPrefix + "Твои напоминания:\n\n",
 		RemindersMenuFooter:     "\nЧто делаем?",
 		RemindersMenuItemRow:    "• %s — %s\n",
-		RemindersLimitReached:   "Слишком много напоминаний. Удали что-то и попробуй снова",
 		ReminderNamePrompt:      "✍️ Назови напоминание",
 		ReminderNameEmpty:       "Пустое название. Напиши ещё раз",
 		ReminderNameTooLong:     "Слишком длинно. Сократи название",

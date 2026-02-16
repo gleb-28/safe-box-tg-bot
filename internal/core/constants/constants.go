@@ -29,6 +29,8 @@ const (
 var FallbackEmojis = []string{"✨", "👀", "🌿", "☕", "🤍", "🍫"}
 var WeekdayShortRu = []string{"пн", "вт", "ср", "чт", "пт", "сб", "вс"}
 
+const ReminderPrefix = "⏰ "
+
 const (
 	DefaultDayStartMinutes = 720  // 12:00
 	DefaultDayEndMinutes   = 1320 // 22:00

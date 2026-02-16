@@ -97,6 +97,8 @@ func (w *Worker) handle(nowUTC time.Time, r models.Reminder) {
 		}
 	}
 
+	text = constants.ReminderPrefix + text
+
 	if err := w.send(userDTO.TelegramID, text); err != nil {
 		retry := nowUTC.Add(time.Duration(constants.NotificationRetryMinutes) * time.Minute)
 		_ = w.reminderService.SetNextRun(r.ID, r.UserID, retry)
