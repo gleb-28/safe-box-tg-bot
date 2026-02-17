@@ -78,7 +78,7 @@ func (s *Service) CreateInterval(userID int64, entityName string, intervalMinute
 		return nil, ErrInvalidInterval
 	}
 
-	n := models.Reminder{
+	r := models.Reminder{
 		UserID:          userID,
 		Name:            name,
 		Schedule:        models.ReminderScheduleInterval,
@@ -86,17 +86,17 @@ func (s *Service) CreateInterval(userID int64, entityName string, intervalMinute
 		Enabled:         true,
 	}
 
-	next, ok := s.scheduler.ComputeNext(n, now, loc)
+	next, ok := s.scheduler.ComputeNext(r, now, loc)
 	if !ok {
 		return nil, ErrInvalidSchedule
 	}
-	n.NextRun = next
+	r.NextRun = next
 
-	if err := s.reminderRepo.Create(&n); err != nil {
+	if err := s.reminderRepo.Create(&r); err != nil {
 		return nil, err
 	}
-	s.upsertReminderInStore(userID, n)
-	return &n, nil
+	s.upsertReminderInStore(userID, r)
+	return &r, nil
 }
 
 func (s *Service) CreateDaily(userID int64, entityName string, timeOfDayMinutes int16, now time.Time, loc *time.Location) (*models.Reminder, error) {
@@ -114,7 +114,7 @@ func (s *Service) CreateDaily(userID int64, entityName string, timeOfDayMinutes 
 		return nil, ErrInvalidTimeOfDay
 	}
 
-	n := models.Reminder{
+	r := models.Reminder{
 		UserID:           userID,
 		Name:             name,
 		Schedule:         models.ReminderScheduleDaily,
@@ -122,17 +122,17 @@ func (s *Service) CreateDaily(userID int64, entityName string, timeOfDayMinutes 
 		Enabled:          true,
 	}
 
-	next, ok := s.scheduler.ComputeNext(n, now, loc)
+	next, ok := s.scheduler.ComputeNext(r, now, loc)
 	if !ok {
 		return nil, ErrInvalidSchedule
 	}
-	n.NextRun = next
+	r.NextRun = next
 
-	if err := s.reminderRepo.Create(&n); err != nil {
+	if err := s.reminderRepo.Create(&r); err != nil {
 		return nil, err
 	}
-	s.upsertReminderInStore(userID, n)
-	return &n, nil
+	s.upsertReminderInStore(userID, r)
+	return &r, nil
 }
 
 func (s *Service) CreateWeekly(userID int64, entityName string, weekday int8, timeOfDayMinutes int16, now time.Time, loc *time.Location) (*models.Reminder, error) {
@@ -153,7 +153,7 @@ func (s *Service) CreateWeekly(userID int64, entityName string, weekday int8, ti
 		return nil, ErrInvalidTimeOfDay
 	}
 
-	n := models.Reminder{
+	r := models.Reminder{
 		UserID:           userID,
 		Name:             name,
 		Schedule:         models.ReminderScheduleWeekly,
@@ -162,17 +162,17 @@ func (s *Service) CreateWeekly(userID int64, entityName string, weekday int8, ti
 		Enabled:          true,
 	}
 
-	next, ok := s.scheduler.ComputeNext(n, now, loc)
+	next, ok := s.scheduler.ComputeNext(r, now, loc)
 	if !ok {
 		return nil, ErrInvalidSchedule
 	}
-	n.NextRun = next
+	r.NextRun = next
 
-	if err := s.reminderRepo.Create(&n); err != nil {
+	if err := s.reminderRepo.Create(&r); err != nil {
 		return nil, err
 	}
-	s.upsertReminderInStore(userID, n)
-	return &n, nil
+	s.upsertReminderInStore(userID, r)
+	return &r, nil
 }
 
 func (s *Service) CreateMonthly(userID int64, entityName string, day int8, timeOfDayMinutes int16, now time.Time, loc *time.Location) (*models.Reminder, error) {
@@ -194,7 +194,7 @@ func (s *Service) CreateMonthly(userID int64, entityName string, day int8, timeO
 	}
 
 	dayCopy := day
-	n := models.Reminder{
+	r := models.Reminder{
 		UserID:           userID,
 		Name:             name,
 		Schedule:         models.ReminderScheduleMonthly,
@@ -203,17 +203,17 @@ func (s *Service) CreateMonthly(userID int64, entityName string, day int8, timeO
 		Enabled:          true,
 	}
 
-	next, ok := s.scheduler.ComputeNext(n, now, loc)
+	next, ok := s.scheduler.ComputeNext(r, now, loc)
 	if !ok {
 		return nil, ErrInvalidSchedule
 	}
-	n.NextRun = next
+	r.NextRun = next
 
-	if err := s.reminderRepo.Create(&n); err != nil {
+	if err := s.reminderRepo.Create(&r); err != nil {
 		return nil, err
 	}
-	s.upsertReminderInStore(userID, n)
-	return &n, nil
+	s.upsertReminderInStore(userID, r)
+	return &r, nil
 }
 
 func (s *Service) CreateOnce(userID int64, entityName string, runAt time.Time, now time.Time, loc *time.Location) (*models.Reminder, error) {
@@ -231,7 +231,7 @@ func (s *Service) CreateOnce(userID int64, entityName string, runAt time.Time, n
 		return nil, ErrInvalidSchedule
 	}
 
-	n := models.Reminder{
+	r := models.Reminder{
 		UserID:   userID,
 		Name:     name,
 		Schedule: models.ReminderScheduleOnce,
@@ -239,41 +239,41 @@ func (s *Service) CreateOnce(userID int64, entityName string, runAt time.Time, n
 		Enabled:  true,
 	}
 
-	if err := s.reminderRepo.Create(&n); err != nil {
+	if err := s.reminderRepo.Create(&r); err != nil {
 		return nil, err
 	}
-	s.upsertReminderInStore(userID, n)
-	return &n, nil
+	s.upsertReminderInStore(userID, r)
+	return &r, nil
 }
 
 func (s *Service) Enable(id uint, userID int64, now time.Time, loc *time.Location) error {
 	if err := s.ensureRemindersSessionLoaded(userID); err != nil {
 		return err
 	}
-	n, err := s.reminderRepo.GetByID(id)
+	r, found, err := s.reminderRepo.TryGet(id)
 	if err != nil {
+		return err
+	}
+	if !found || r.UserID != userID {
 		return ErrReminderNotFound
 	}
-	if n.UserID != userID {
-		return ErrReminderNotFound
-	}
-	if n.Enabled {
+	if r.Enabled {
 		return nil
 	}
-	next := n.NextRun
+	next := r.NextRun
 	if next.IsZero() {
-		if computed, ok := s.scheduler.ComputeNext(*n, now, loc); ok {
+		if computed, ok := s.scheduler.ComputeNext(*r, now, loc); ok {
 			next = computed
 		} else {
 			next = now.Add(time.Duration(constants.DefaultNotificationIntervalMinMinutes) * time.Minute)
 		}
 	}
-	n.Enabled = true
-	n.NextRun = next
-	if err := s.reminderRepo.Update(n); err != nil {
+	r.Enabled = true
+	r.NextRun = next
+	if err := s.reminderRepo.Update(r); err != nil {
 		return err
 	}
-	s.upsertReminderInStore(userID, *n)
+	s.upsertReminderInStore(userID, *r)
 	return nil
 }
 
@@ -281,21 +281,21 @@ func (s *Service) Disable(id uint, userID int64) error {
 	if err := s.ensureRemindersSessionLoaded(userID); err != nil {
 		return err
 	}
-	n, err := s.reminderRepo.GetByID(id)
+	r, found, err := s.reminderRepo.TryGet(id)
 	if err != nil {
-		return ErrReminderNotFound
-	}
-	if n.UserID != userID {
-		return ErrReminderNotFound
-	}
-	if !n.Enabled {
-		return nil
-	}
-	n.Enabled = false
-	if err := s.reminderRepo.Update(n); err != nil {
 		return err
 	}
-	s.upsertReminderInStore(userID, *n)
+	if !found || r.UserID != userID {
+		return ErrReminderNotFound
+	}
+	if !r.Enabled {
+		return nil
+	}
+	r.Enabled = false
+	if err := s.reminderRepo.Update(r); err != nil {
+		return err
+	}
+	s.upsertReminderInStore(userID, *r)
 	return nil
 }
 
@@ -314,35 +314,35 @@ func (s *Service) Delete(id uint, userID int64) error {
 	return nil
 }
 
-func (s *Service) Reschedule(n *models.Reminder, now time.Time, loc *time.Location) error {
-	if err := s.ensureRemindersSessionLoaded(n.UserID); err != nil {
+func (s *Service) Reschedule(r *models.Reminder, now time.Time, loc *time.Location) error {
+	if err := s.ensureRemindersSessionLoaded(r.UserID); err != nil {
 		return err
 	}
 
-	if n.Schedule == models.ReminderScheduleOnce {
-		n.Enabled = false
-		n.NextRun = time.Time{}
-		if err := s.reminderRepo.Update(n); err != nil {
+	if r.Schedule == models.ReminderScheduleOnce {
+		r.Enabled = false
+		r.NextRun = time.Time{}
+		if err := s.reminderRepo.Update(r); err != nil {
 			return err
 		}
-		s.upsertReminderInStore(n.UserID, *n)
+		s.upsertReminderInStore(r.UserID, *r)
 		return nil
 	}
 
-	next, ok := s.scheduler.ComputeNext(*n, now, loc)
+	next, ok := s.scheduler.ComputeNext(*r, now, loc)
 	if !ok {
-		n.Enabled = false
-		if err := s.reminderRepo.Update(n); err != nil {
+		r.Enabled = false
+		if err := s.reminderRepo.Update(r); err != nil {
 			return err
 		}
-		s.upsertReminderInStore(n.UserID, *n)
+		s.upsertReminderInStore(r.UserID, *r)
 		return nil
 	}
-	n.NextRun = next
-	if err := s.reminderRepo.Update(n); err != nil {
+	r.NextRun = next
+	if err := s.reminderRepo.Update(r); err != nil {
 		return err
 	}
-	s.upsertReminderInStore(n.UserID, *n)
+	s.upsertReminderInStore(r.UserID, *r)
 	return nil
 }
 
@@ -369,8 +369,8 @@ func (s *Service) GetByUser(userID int64) ([]models.Reminder, error) {
 	return s.store.GetReminderList(userID), nil
 }
 
-func (s *Service) GetByID(id uint) (*models.Reminder, error) {
-	return s.reminderRepo.GetByID(id)
+func (s *Service) GetByID(id uint) (*models.Reminder, bool, error) {
+	return s.reminderRepo.TryGet(id)
 }
 
 func (s *Service) upsertReminderInStore(userID int64, reminder models.Reminder) {

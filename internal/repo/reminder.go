@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"safeboxtgbot/models"
 	"time"
 
@@ -15,12 +16,16 @@ func NewReminderRepo(db *gorm.DB) *ReminderRepo {
 	return &ReminderRepo{db: db}
 }
 
-func (r *ReminderRepo) GetByID(id uint) (*models.Reminder, error) {
+func (r *ReminderRepo) TryGet(id uint) (*models.Reminder, bool, error) {
 	var n models.Reminder
-	if err := r.db.First(&n, id).Error; err != nil {
-		return nil, err
+	err := r.db.First(&n, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, nil
 	}
-	return &n, nil
+	if err != nil {
+		return nil, false, err
+	}
+	return &n, true, nil
 }
 
 func (r *ReminderRepo) GetByUser(userID int64) ([]models.Reminder, error) {

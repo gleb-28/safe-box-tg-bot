@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"safeboxtgbot/models"
 	"time"
 
@@ -13,6 +14,18 @@ type MessageLogRepo struct {
 
 func NewMessageLogRepo(db *gorm.DB) *MessageLogRepo {
 	return &MessageLogRepo{db: db}
+}
+
+func (r *MessageLogRepo) TryGet(id uint) (*models.MessageLog, bool, error) {
+	var log models.MessageLog
+	err := r.db.First(&log, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return &log, true, nil
 }
 
 func (r *MessageLogRepo) Create(log *models.MessageLog) error {

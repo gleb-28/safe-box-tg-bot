@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"safeboxtgbot/models"
 
 	"gorm.io/gorm"
@@ -12,6 +13,18 @@ type ItemRepo struct {
 
 func NewItemRepo(db *gorm.DB) *ItemRepo {
 	return &ItemRepo{db: db}
+}
+
+func (r *ItemRepo) TryGet(userID int64, itemID uint) (*models.Item, bool, error) {
+	var item models.Item
+	err := r.db.Where("user_id = ? AND id = ?", userID, itemID).First(&item).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return &item, true, nil
 }
 
 func (r *ItemRepo) GetByTelegramID(userID int64) ([]models.Item, error) {

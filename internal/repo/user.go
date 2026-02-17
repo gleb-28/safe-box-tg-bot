@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"errors"
 	"safeboxtgbot/models"
 	"time"
 
@@ -15,13 +16,20 @@ func NewUserRepo(db *gorm.DB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) GetByTelegramID(userID int64) (models.User, error) {
+func (r *UserRepo) TryGet(userID int64) (*models.User, bool, error) {
 	var user models.User
-	resp := r.db.Preload("Items").
-		Find(&models.User{}, &models.User{TelegramID: userID}).
-		Scan(&user)
+	err := r.db.Preload("Items").
+		Where("telegram_id = ?", userID).
+		First(&user).Error
 
-	return user, resp.Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &user, true, nil
 }
 
 func (r *UserRepo) Upsert(user *models.User) error {

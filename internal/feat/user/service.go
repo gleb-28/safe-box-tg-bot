@@ -188,14 +188,14 @@ func (s *Service) ensureUserSessionLoaded(userID int64) {
 	}
 
 	s.logger.Debug(fmt.Sprintf("Loading user into session for userID=%d", userID))
-	userDTO, err := s.userRepo.GetByTelegramID(userID)
+	userDTO, found, err := s.userRepo.TryGet(userID)
 	if err != nil {
 		s.logger.Error(fmt.Sprintf("Error loading user from DB for userID=%d: %v", userID, err))
 		return
 	}
 
-	if userDTO.TelegramID != 0 {
-		s.store.UpdateUser(userID, &userDTO)
+	if found {
+		s.store.UpdateUser(userID, userDTO)
 		s.logger.Debug(fmt.Sprintf("User loaded into session for userID=%d", userID))
 		return
 	}
