@@ -4,6 +4,7 @@ import (
 	"context"
 	b "safeboxtgbot/internal"
 	"safeboxtgbot/internal/core/config"
+	"safeboxtgbot/internal/core/constants"
 	l "safeboxtgbot/internal/core/logger"
 	d "safeboxtgbot/internal/db"
 	"safeboxtgbot/internal/feat/items"
@@ -27,7 +28,8 @@ func main() {
 	db := d.MustDB(cfg, logger)
 
 	fsm := fsmManager.New(logger)
-	sessionStore := session.NewStore(logger)
+	sessionStore := session.NewStore(constants.NonAuthSessionTTL, logger)
+	sessionStore.StartCleanupWorker(context.Background(), constants.NonAuthSessionTTL/2)
 
 	userRepo := repo.NewUserRepo(db)
 	itemRepo := repo.NewItemRepo(db)

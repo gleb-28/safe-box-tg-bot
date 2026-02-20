@@ -1,6 +1,9 @@
 package constants
 
-import "safeboxtgbot/models"
+import (
+	"safeboxtgbot/models"
+	"time"
+)
 
 const (
 	RoflMode models.UserMode = "ROFL_MODE"
@@ -22,6 +25,7 @@ const (
 	NotificationRetryMinutes              = 10
 	NotificationItemCooldownMinutes       = 360
 	ReminderWorkerIntervalSeconds         = 30
+	NonAuthSessionTTL                     = 10 * time.Minute
 )
 
 const (

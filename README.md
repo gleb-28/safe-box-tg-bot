@@ -37,6 +37,11 @@ LLM requests go through OpenRouter using the prompt in `data/prompt`; replies ar
 - Max items per user: 200.
 - Item names are normalized (trimmed, lowercased, collapsed spaces) and limited to 40 characters.
 
+## 🗄️ Sessions
+
+- In-memory session store with TTL for non-authenticated users: `constants.NonAuthSessionTTL` (10 minutes) and a background cleanup worker.
+- Authorized users are marked and kept indefinitely (no TTL) to avoid deleting active sessions.
+
 ## 🧱 Tech stack
 
 - **Go 1.25** – primary language.

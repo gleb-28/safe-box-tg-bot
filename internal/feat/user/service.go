@@ -57,6 +57,7 @@ func (s *Service) AddUser(userID int64) error {
 	s.store.Update(userID, func(sess *session.Session) {
 		sess.User.NextNotification = nextNotification
 	})
+	s.store.MarkAuthorized(userID)
 	return s.userRepo.Upsert(&models.User{
 		TelegramID:                     userID,
 		NotificationPreset:             preset.Key,

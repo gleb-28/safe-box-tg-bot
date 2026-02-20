@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 	"safeboxtgbot/internal/core/logger"
 	"safeboxtgbot/models"
@@ -16,9 +17,11 @@ type Session struct {
 	UserLastMsg        *telebot.Message
 	BotLastMsg         *telebot.Message
 	ReminderBotLastMsg *telebot.Message
+	Authorized         bool
 	Items              ItemsState
 	Daytime            DaytimeState
 	Reminders          RemindersState
+	ExpiresAt          time.Time
 }
 
 type ItemsState struct {
@@ -50,12 +53,14 @@ type Store struct {
 	sessions map[int64]*Session
 	mu       sync.RWMutex
 	logger   logger.AppLogger
+	ttl      time.Duration
 }
 
-func NewStore(logger logger.AppLogger) *Store {
+func NewStore(ttl time.Duration, logger logger.AppLogger) *Store {
 	return &Store{
 		sessions: make(map[int64]*Session),
 		logger:   logger,
+		ttl:      ttl,
 	}
 }
 
@@ -65,6 +70,9 @@ func (store *Store) Get(userID int64) *Session {
 	store.mu.RUnlock()
 
 	if ok {
+		store.mu.Lock()
+		store.ensureExpiryLocked(session)
+		store.mu.Unlock()
 		store.logger.Debug(fmt.Sprintf("Session cache hit for userID=%d", userID))
 		return session
 	}
@@ -83,6 +91,7 @@ func (store *Store) Get(userID int64) *Session {
 		},
 		Reminders: RemindersState{},
 	}
+	store.ensureExpiryLocked(session)
 	store.sessions[userID] = session
 	store.logger.Info(fmt.Sprintf("New session created for userID=%d", userID))
 
@@ -223,4 +232,75 @@ func (store *Store) ClearReminders(userID int64) {
 		sess.Reminders.Loaded = false
 		sess.Reminders.Pending = nil
 	})
+}
+
+// Delete removes a session explicitly.
+func (store *Store) Delete(userID int64) {
+	store.mu.Lock()
+	defer store.mu.Unlock()
+	store.deleteLocked(userID)
+}
+
+// MarkAuthorized stops expiration for an authenticated user session.
+func (store *Store) MarkAuthorized(userID int64) {
+	session := store.Get(userID)
+
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	session.Authorized = true
+	session.ExpiresAt = time.Time{}
+}
+
+// StartCleanupWorker launches a ticker-based cleanup loop.
+func (store *Store) StartCleanupWorker(ctx context.Context, interval time.Duration) {
+	if interval <= 0 {
+		return
+	}
+
+	ticker := time.NewTicker(interval)
+
+	go func() {
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				store.cleanupExpired()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+func (store *Store) cleanupExpired() {
+	now := time.Now()
+
+	store.mu.Lock()
+	defer store.mu.Unlock()
+
+	for userID, session := range store.sessions {
+		if session.Authorized || session.ExpiresAt.IsZero() {
+			continue
+		}
+
+		if now.After(session.ExpiresAt) {
+			store.logger.Debug(fmt.Sprintf("Session expired for userID=%d", userID))
+			store.deleteLocked(userID)
+		}
+	}
+}
+
+func (store *Store) deleteLocked(userID int64) {
+	delete(store.sessions, userID)
+}
+
+func (store *Store) ensureExpiryLocked(session *Session) {
+	if session.Authorized || store.ttl <= 0 {
+		session.ExpiresAt = time.Time{}
+		return
+	}
+
+	session.ExpiresAt = time.Now().Add(store.ttl)
 }

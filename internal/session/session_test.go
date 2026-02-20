@@ -4,6 +4,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"safeboxtgbot/models"
 )
@@ -59,7 +60,7 @@ func (l *testLogger) countInfoContains(substr string) int {
 
 func TestStoreGet_CacheMissCreatesSession(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	sess := store.Get(42)
 	if sess == nil || sess.User == nil {
@@ -79,7 +80,7 @@ func TestStoreGet_CacheMissCreatesSession(t *testing.T) {
 
 func TestStoreGet_CacheHitOnSecondCall(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(7)
 	_ = store.Get(7)
@@ -94,7 +95,7 @@ func TestStoreGet_CacheHitOnSecondCall(t *testing.T) {
 
 func TestStoreUpdateUser_SetsLoadedFlag(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(9)
 	store.UpdateUser(9, &models.User{TelegramID: 9})
@@ -109,7 +110,7 @@ func TestStoreUpdateUser_SetsLoadedFlag(t *testing.T) {
 
 func TestStoreIsUserLoaded_DefaultFalse(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	if store.IsUserLoaded(100) {
 		t.Fatalf("expected UserIsLoaded to be false for new session")
@@ -118,7 +119,7 @@ func TestStoreIsUserLoaded_DefaultFalse(t *testing.T) {
 
 func TestStoreUpdate_DoesNothingWithoutSession(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	updated := false
 	store.Update(5, func(s *Session) {
@@ -132,7 +133,7 @@ func TestStoreUpdate_DoesNothingWithoutSession(t *testing.T) {
 
 func TestStoreUpdate_ModifiesSession(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	sess := store.Get(11)
 	store.Update(11, func(s *Session) {
@@ -146,7 +147,7 @@ func TestStoreUpdate_ModifiesSession(t *testing.T) {
 
 func TestStoreGetUser_ReturnsUpdatedUser(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(21)
 	store.UpdateUser(21, &models.User{TelegramID: 555})
@@ -159,7 +160,7 @@ func TestStoreGetUser_ReturnsUpdatedUser(t *testing.T) {
 
 func TestStoreItems_DefaultState(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	sess := store.Get(1)
 	if sess.Items.ItemsLoaded {
@@ -175,7 +176,7 @@ func TestStoreItems_DefaultState(t *testing.T) {
 
 func TestStoreSetItemList_MarksLoaded(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(2)
 	items := []models.Item{
@@ -198,7 +199,7 @@ func TestStoreSetItemList_MarksLoaded(t *testing.T) {
 
 func TestStoreEditingItemID(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(3)
 	store.SetEditingItemID(3, 99)
@@ -213,7 +214,7 @@ func TestStoreEditingItemID(t *testing.T) {
 
 func TestStoreUpdateUser_DoesNotAlterItemsState(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(4)
 	items := []models.Item{{Name: "item-a"}}
@@ -236,12 +237,100 @@ func TestStoreUpdateUser_DoesNotAlterItemsState(t *testing.T) {
 
 func TestStoreUpdateUser_DoesNotMarkItemsLoaded(t *testing.T) {
 	logger := &testLogger{}
-	store := NewStore(logger)
+	store := NewStore(time.Minute, logger)
 
 	_ = store.Get(5)
 	store.UpdateUser(5, &models.User{TelegramID: 5})
 
 	if store.IsItemsLoaded(5) {
 		t.Fatalf("expected ItemsLoaded to remain false after UpdateUser")
+	}
+}
+
+func TestStoreGet_SetsExpiryWhenTTLPositive(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(time.Minute, logger)
+
+	sess := store.Get(1)
+	if sess.ExpiresAt.IsZero() {
+		t.Fatalf("expected ExpiresAt to be set when ttl > 0")
+	}
+}
+
+func TestStoreGet_DisablesExpiryWhenTTLZero(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(0, logger)
+
+	sess := store.Get(1)
+	if !sess.ExpiresAt.IsZero() {
+		t.Fatalf("expected ExpiresAt to be zero when ttl disabled")
+	}
+}
+
+func TestCleanupExpired_RemovesExpiredSessions(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(10*time.Millisecond, logger)
+
+	_ = store.Get(1)
+	time.Sleep(15 * time.Millisecond)
+	store.cleanupExpired()
+
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	if _, ok := store.sessions[1]; ok {
+		t.Fatalf("expected expired session to be removed")
+	}
+}
+
+func TestCleanupExpired_KeepsFreshSessions(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(50*time.Millisecond, logger)
+
+	_ = store.Get(1)
+	time.Sleep(10 * time.Millisecond)
+	store.cleanupExpired()
+
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+	if _, ok := store.sessions[1]; !ok {
+		t.Fatalf("expected non-expired session to remain")
+	}
+}
+
+func TestMarkAuthorized_DisablesExpiry(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(10*time.Millisecond, logger)
+
+	sess := store.Get(1)
+	if sess.ExpiresAt.IsZero() {
+		t.Fatalf("expected ExpiresAt set before authorization")
+	}
+
+	store.MarkAuthorized(1)
+
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+
+	sess = store.sessions[1]
+	if !sess.Authorized {
+		t.Fatalf("expected session to be marked authorized")
+	}
+	if !sess.ExpiresAt.IsZero() {
+		t.Fatalf("expected ExpiresAt cleared for authorized session")
+	}
+}
+
+func TestCleanupExpired_SkipsAuthorized(t *testing.T) {
+	logger := &testLogger{}
+	store := NewStore(10*time.Millisecond, logger)
+
+	store.MarkAuthorized(1)
+	store.cleanupExpired()
+
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+
+	if _, ok := store.sessions[1]; !ok {
+		t.Fatalf("expected authorized session to be preserved")
 	}
 }
