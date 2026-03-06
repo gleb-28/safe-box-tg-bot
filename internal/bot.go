@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"safeboxtgbot/internal/core/config"
@@ -10,6 +11,7 @@ import (
 	"safeboxtgbot/internal/feat/user"
 	fsmManager "safeboxtgbot/internal/fsm"
 	"safeboxtgbot/internal/text"
+	"strings"
 	"time"
 
 	"gopkg.in/telebot.v4"
@@ -45,9 +47,20 @@ func (bot *Bot) MustSendAlbum(userID int64, album telebot.Album) []telebot.Messa
 
 func (bot *Bot) MustDelete(msg *telebot.Message) {
 	err := bot.Delete(msg)
-	if err != nil {
-		bot.Logger.Error(fmt.Sprintf("Error deleting message to %v: %v", msg.Chat.ID, err.Error()))
+	if err == nil {
+		return
 	}
+
+	var apiErr *telebot.Error
+	if errors.As(err, &apiErr) && apiErr.Code == 400 &&
+		(strings.Contains(apiErr.Description, "can't be deleted") ||
+			strings.Contains(apiErr.Description, "message to delete not found")) {
+		// Could not delete old msg
+		bot.Logger.Debug(fmt.Sprintf("Skip delete message %d in chat %d: %s", msg.ID, msg.Chat.ID, apiErr.Description))
+		return
+	}
+
+	bot.Logger.Error(fmt.Sprintf("Error deleting message to %v: %v", msg.Chat.ID, err.Error()))
 }
 
 func (bot *Bot) MustReact(msg *telebot.Message, reaction telebot.Reaction) {
