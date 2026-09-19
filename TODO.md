@@ -17,6 +17,8 @@
 
 ### P2 — soon
 
+- [ ] **Clear message log**
+  _Notes_: Provide a bot command to purge a user’s stored message log and send a confirmation.
 
 ### P3 — nice-to-have
 
